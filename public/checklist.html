@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESTABLO - Checklist</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <h1 id="checklist-titulo">ESTABLO</h1>
+  <div class="user-info">
+    <span id="nombre-usuario"></span>
+    &nbsp;·&nbsp;<button onclick="cerrarSesion()">Salir</button>
+  </div>
+</header>
+
+<div class="container">
+  <div class="card">
+    <div id="equipos-resumen" style="font-size:13px;color:#6b7d8a;margin-bottom:10px"></div>
+    <div id="items-container"></div>
+    <div class="error-msg" id="envio-error"></div>
+    <div class="ok-msg" id="envio-ok"></div>
+    <button class="btn" id="btn-enviar">Enviar checklist</button>
+  </div>
+</div>
+
+<script src="js/common.js"></script>
+<script src="js/checklist.js"></script>
+</body>
+</html>

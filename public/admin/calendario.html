@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESTABLO Admin - Calendario</title>
+<link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <h1>ESTABLO · Calendario de inspecciones</h1>
+  <div class="user-info">
+    <a href="dashboard.html" style="color:#fff;margin-right:10px">← Panel</a>
+    <span id="nombre-usuario"></span>
+    &nbsp;·&nbsp;<button onclick="cerrarSesion()">Salir</button>
+  </div>
+</header>
+<div class="container wide">
+
+  <div class="card">
+    <label>Equipo</label>
+    <select id="sel-equipo"></select>
+    <div style="display:flex; gap:10px; margin-top:10px; align-items:flex-end">
+      <div><label>Año</label><input id="sel-anio" type="number"></div>
+      <div><label>Mes</label>
+        <select id="sel-mes">
+          <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+          <option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
+          <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
+          <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+        </select>
+      </div>
+      <button class="btn" id="btn-ver" style="margin-top:0">Ver</button>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-box"><div class="num" id="stat-mes">0</div><div class="label">Inspecciones este mes</div></div>
+    <div class="stat-box"><div class="num" id="stat-total">0</div><div class="label">Inspecciones totales</div></div>
+    <div class="stat-box"><div class="num" id="stat-observaciones">0</div><div class="label">Observaciones registradas</div></div>
+  </div>
+
+  <div class="card">
+    <div class="calendario-mes" id="calendario"></div>
+    <div class="leyenda">
+      <span><i style="background:#cfe8fb"></i> Pre-operacional</span>
+      <span><i style="background:#fde3b8"></i> Mantenimiento / otro</span>
+      <span><i style="background:linear-gradient(135deg, #cfe8fb 50%, #fde3b8 50%)"></i> Ambos en el día</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Detalle de inspecciones del mes</h2>
+    <table class="tabla">
+      <thead><tr><th>Fecha</th><th>Folio</th><th>Checklist</th><th>Observaciones</th></tr></thead>
+      <tbody id="tabla-inspecciones"></tbody>
+    </table>
+  </div>
+
+</div>
+<script src="../js/common.js"></script>
+<script src="js/calendario.js"></script>
+</body>
+</html>

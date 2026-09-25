@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESTABLO - Seleccionar checklist</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <h1>ESTABLO</h1>
+  <div class="user-info">
+    <span id="nombre-usuario"></span>
+    &nbsp;·&nbsp;<button onclick="cerrarSesion()">Salir</button>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="card" id="paso-checklist">
+    <h2>1. Selecciona el checklist</h2>
+    <div id="lista-checklists" class="grid-menu"></div>
+  </div>
+
+  <div class="card" id="paso-equipos" style="display:none">
+    <h2>2. Ingresa los equipos: <span id="checklist-seleccionado-nombre"></span></h2>
+    <p style="font-size:13px;color:#6b7d8a">Ingresa la nomenclatura de cada equipo (ej. BRR-01) o escanéalo con el QR.</p>
+
+    <div style="display:flex; gap:8px;">
+      <input id="input-nomenclatura" placeholder="Ej. BRR-01" style="flex:1">
+      <button class="btn" id="btn-agregar-equipo" style="margin-top:0">Agregar</button>
+      <button class="btn secundario" id="btn-escanear" style="margin-top:0">Escanear QR</button>
+    </div>
+    <div class="error-msg" id="equipo-error"></div>
+
+    <div id="qr-reader" style="display:none"></div>
+    <button class="btn secundario" id="btn-cerrar-scanner" style="display:none">Cerrar cámara</button>
+
+    <div id="chips-equipos" style="margin-top:14px"></div>
+
+    <div class="error-msg" id="continuar-error"></div>
+    <button class="btn" id="btn-continuar">Continuar</button>
+    <button class="btn secundario" id="btn-cambiar-checklist">Cambiar checklist</button>
+  </div>
+
+</div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="js/common.js"></script>
+<script src="js/seleccionar.js"></script>
+</body>
+</html>

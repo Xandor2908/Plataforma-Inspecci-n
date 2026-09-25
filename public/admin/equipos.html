@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESTABLO Admin - Equipos</title>
+<link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <h1>ESTABLO · Equipos</h1>
+  <div class="user-info">
+    <a href="dashboard.html" style="color:#fff;margin-right:10px">← Panel</a>
+    <span id="nombre-usuario"></span>
+    &nbsp;·&nbsp;<button onclick="cerrarSesion()">Salir</button>
+  </div>
+</header>
+<div class="container wide">
+
+  <div class="card">
+    <h2>Agregar equipo</h2>
+    <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
+      <div style="min-width:180px">
+        <label>Tipo</label>
+        <select id="sel-tipo"></select>
+      </div>
+      <div style="min-width:160px">
+        <label>Nomenclatura (opcional)</label>
+        <input id="input-nom" placeholder="Autogenerada si se deja vacío">
+      </div>
+      <div style="flex:1;min-width:160px">
+        <label>Nombre / alias (opcional)</label>
+        <input id="input-nombre">
+      </div>
+      <button class="btn" id="btn-crear" style="margin-top:0">Agregar</button>
+    </div>
+    <div class="error-msg" id="crear-error"></div>
+  </div>
+
+  <div class="card">
+    <h2>Equipos registrados</h2>
+    <table class="tabla">
+      <thead><tr><th>Nomenclatura</th><th>Tipo</th><th>Alias</th><th>Estado</th><th>QR</th><th></th></tr></thead>
+      <tbody id="tabla-equipos"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<div id="modal-qr" style="display:none; position:fixed; inset:0; background:#0008; align-items:center; justify-content:center;">
+  <div class="card" style="text-align:center">
+    <h3 id="qr-modal-titulo"></h3>
+    <img id="qr-modal-img" style="width:250px;height:250px">
+    <div><button class="btn secundario" onclick="document.getElementById('modal-qr').style.display='none'">Cerrar</button></div>
+  </div>
+</div>
+
+<script src="../js/common.js"></script>
+<script src="js/equipos.js"></script>
+</body>
+</html>

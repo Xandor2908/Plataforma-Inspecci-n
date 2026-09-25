@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESTABLO Admin - Checklists</title>
+<link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <h1>ESTABLO · Checklists</h1>
+  <div class="user-info">
+    <a href="dashboard.html" style="color:#fff;margin-right:10px">← Panel</a>
+    <span id="nombre-usuario"></span>
+    &nbsp;·&nbsp;<button onclick="cerrarSesion()">Salir</button>
+  </div>
+</header>
+<div class="container wide">
+
+  <div class="card">
+    <h2>Tipos de checklist</h2>
+    <table class="tabla">
+      <thead><tr><th>Código</th><th>Nombre</th><th>Estado</th><th></th><th></th></tr></thead>
+      <tbody id="tabla-checklists"></tbody>
+    </table>
+  </div>
+
+  <div class="card" id="panel-items" style="display:none">
+    <h2 id="items-titulo"></h2>
+    <p style="font-size:13px;color:#6b7d8a">Un ítem por línea, con formato: <code>Categoría | Descripción del ítem</code></p>
+    <textarea id="items-textarea" rows="12"></textarea>
+    <div class="error-msg" id="items-error"></div>
+    <button class="btn" id="btn-guardar-items">Guardar ítems</button>
+    <button class="btn secundario" onclick="document.getElementById('panel-items').style.display='none'">Cerrar</button>
+  </div>
+
+  <div class="card">
+    <h2>Crear nuevo checklist</h2>
+    <label>Código</label>
+    <input id="nuevo-codigo" placeholder="Ej. 05">
+    <label>Nombre</label>
+    <input id="nuevo-nombre" placeholder="Ej. Checklist de equipo X">
+    <label>Orden (posición en el listado)</label>
+    <input id="nuevo-orden" type="number" value="0">
+    <label>Variantes de equipos requeridos</label>
+    <p style="font-size:12px;color:#6b7d8a;margin:2px 0">Una variante por línea, códigos de tipo separados por coma. Ej: <code>BRR,GEN,TAB,AZU</code></p>
+    <textarea id="nuevo-variantes" rows="3" placeholder="BRR,SST"></textarea>
+    <label>Ítems</label>
+    <textarea id="nuevo-items" rows="8" placeholder="Categoría | Descripción del ítem"></textarea>
+    <div class="error-msg" id="nuevo-error"></div>
+    <button class="btn" id="btn-crear-checklist">Crear checklist</button>
+  </div>
+
+</div>
+<script src="../js/common.js"></script>
+<script src="js/checklists.js"></script>
+</body>
+</html>

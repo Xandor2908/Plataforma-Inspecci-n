@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESTABLO Admin - Panel</title>
+<link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <h1>ESTABLO · Plataforma maestra</h1>
+  <div class="user-info">
+    <span id="nombre-usuario"></span>
+    &nbsp;·&nbsp;<button onclick="cerrarSesion()">Salir</button>
+  </div>
+</header>
+<div class="container wide">
+  <div class="grid-menu">
+    <a href="equipos.html"><div class="menu-card">🛠️ Equipos<br><span style="font-weight:400;font-size:12px">Registro y QR</span></div></a>
+    <a href="checklists.html"><div class="menu-card">📋 Checklists<br><span style="font-weight:400;font-size:12px">Tipos y plantillas</span></div></a>
+    <a href="incidencias.html"><div class="menu-card">🚨 Incidencias<br><span style="font-weight:400;font-size:12px">Pendientes y resueltas</span></div></a>
+    <a href="calendario.html"><div class="menu-card">📅 Calendario<br><span style="font-weight:400;font-size:12px">Inspecciones por equipo</span></div></a>
+    <a href="usuarios.html"><div class="menu-card">👤 Usuarios<br><span style="font-weight:400;font-size:12px">Admin / Operador</span></div></a>
+  </div>
+</div>
+<script src="../js/common.js"></script>
+<script>requireSession('admin');</script>
+</body>
+</html>

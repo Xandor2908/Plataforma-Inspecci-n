@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESTABLO Admin - Usuarios</title>
+<link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <h1>ESTABLO · Usuarios</h1>
+  <div class="user-info">
+    <a href="dashboard.html" style="color:#fff;margin-right:10px">← Panel</a>
+    <span id="nombre-usuario"></span>
+    &nbsp;·&nbsp;<button onclick="cerrarSesion()">Salir</button>
+  </div>
+</header>
+<div class="container wide">
+
+  <div class="card">
+    <h2>Nuevo usuario</h2>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end">
+      <div><label>Nombre</label><input id="nuevo-nombre-usuario"></div>
+      <div><label>Usuario</label><input id="nuevo-usuario-login"></div>
+      <div><label>Contraseña</label><input id="nuevo-usuario-password" type="password"></div>
+      <div><label>Rol</label>
+        <select id="nuevo-usuario-rol">
+          <option value="operador">No admin (operador)</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <button class="btn" id="btn-crear-usuario" style="margin-top:0">Crear</button>
+    </div>
+    <div class="error-msg" id="usuario-error"></div>
+  </div>
+
+  <div class="card">
+    <h2>Usuarios registrados</h2>
+    <table class="tabla">
+      <thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Estado</th><th></th></tr></thead>
+      <tbody id="tabla-usuarios"></tbody>
+    </table>
+  </div>
+
+</div>
+<script src="../js/common.js"></script>
+<script src="js/usuarios.js"></script>
+</body>
+</html>
