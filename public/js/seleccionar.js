@@ -16,7 +16,7 @@ async function cargarChecklists() {
   checklists.forEach((c) => {
     const a = document.createElement('a');
     a.href = '#';
-    a.innerHTML = `<div class="menu-card">${c.codigo}<br><span style="font-weight:400;font-size:12px">${c.nombre}</span></div>`;
+    a.innerHTML = `<div class="menu-card">${c.codigo_corto || c.codigo}<br><span style="font-weight:400;font-size:12px">${c.nombre}</span></div>`;
     a.addEventListener('click', (e) => {
       e.preventDefault();
       seleccionarChecklist(c);

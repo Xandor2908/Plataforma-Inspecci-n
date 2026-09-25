@@ -18,19 +18,26 @@ CREATE TABLE IF NOT EXISTS tipos_equipo (
 );
 
 CREATE TABLE IF NOT EXISTS equipos (
-  id           SERIAL PRIMARY KEY,
-  nomenclatura TEXT NOT NULL UNIQUE,   -- ej. BRR-01
-  tipo_codigo  TEXT NOT NULL REFERENCES tipos_equipo(codigo),
-  nombre       TEXT,                   -- alias/descripcion libre
-  activo       BOOLEAN NOT NULL DEFAULT TRUE,
-  created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+  id            SERIAL PRIMARY KEY,
+  nomenclatura  TEXT NOT NULL UNIQUE,   -- ej. BRR-01 (siempre autogenerada)
+  tipo_codigo   TEXT NOT NULL REFERENCES tipos_equipo(codigo),
+  marca         TEXT,
+  modelo        TEXT,
+  n_serie       TEXT,
+  fecha_ingreso DATE,
+  ubicacion     TEXT,
+  estado        TEXT NOT NULL DEFAULT 'activo' CHECK (estado IN ('activo', 'mantenimiento', 'baja')),
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- Tipos/plantillas de checklist (administrables desde la plataforma maestra)
 CREATE TABLE IF NOT EXISTS checklist_tipos (
   id                SERIAL PRIMARY KEY,
-  codigo            TEXT NOT NULL UNIQUE,   -- ej. '01-01'
+  codigo            TEXT NOT NULL UNIQUE,   -- identificador interno, ej. '01-01'
+  codigo_corto      TEXT UNIQUE,            -- código visible corto, ej. 'C01'
   nombre            TEXT NOT NULL,          -- ej. 'Checklist de inspeccion pre-operacional de equipo HotSpot'
+  frecuencia        TEXT NOT NULL DEFAULT 'Diaria',
+  es_preoperacional BOOLEAN NOT NULL DEFAULT FALSE,
   equipos_variantes JSONB NOT NULL,         -- ver seed.js: lista de variantes, cada una es array de tipo_codigo requeridos
   activo            BOOLEAN NOT NULL DEFAULT TRUE,
   orden             INTEGER NOT NULL DEFAULT 0,

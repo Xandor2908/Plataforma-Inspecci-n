@@ -1,31 +1,59 @@
 :root {
-  --azul: #1e5f8c;
-  --azul-oscuro: #143f5c;
-  --verde: #2e9e5b;
-  --rojo: #c0392b;
-  --gris: #f4f6f8;
-  --gris-borde: #d9e0e6;
-  --texto: #22303c;
-  --radio: 8px;
+  /* Paleta ESTABLO v9 */
+  --bg: #f6f7f9;
+  --card: #fff;
+  --line: #e5e7eb;
+  --line-2: #f1f3f5;
+  --ink: #0f172a;
+  --ink-2: #475569;
+  --ink-3: #94a3b8;
+  --navy: #101828;
+  --green: #16a34a;
+  --green-2: #22c55e;
+  --green-soft: #f0fdf4;
+  --green-line: #bbf7d0;
+  --blue: #2563eb;
+  --blue-soft: #eff6ff;
+  --blue-line: #dbeafe;
+  --amber: #f59e0b;
+  --red: #dc2626;
+  --red-soft: #fef2f2;
+  --purple: #7c3aed;
+  --r: 14px;
+  --r-sm: 10px;
+  --shadow: 0 1px 2px rgba(16,24,40,.04), 0 8px 24px rgba(16,24,40,.06);
+
+  /* Alias usados en el resto de este archivo */
+  --azul: var(--blue);
+  --azul-oscuro: var(--navy);
+  --verde: var(--green);
+  --rojo: var(--red);
+  --gris: var(--bg);
+  --gris-borde: var(--line);
+  --texto: var(--ink);
+  --radio: var(--r-sm);
 }
 
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-  background: var(--gris);
-  color: var(--texto);
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+  background: var(--bg);
+  color: var(--ink);
 }
 
 header.topbar {
-  background: var(--azul-oscuro);
+  background: var(--navy);
   color: #fff;
   padding: 14px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
+header.topbar h1 { font-weight: 800; letter-spacing: .2px; }
 
 header.topbar h1 { font-size: 18px; margin: 0; }
 header.topbar .user-info { font-size: 13px; opacity: 0.9; }
@@ -36,9 +64,10 @@ header.topbar button:hover { background: #ffffff22; }
 .container.wide { max-width: 1200px; }
 
 .card {
-  background: #fff;
-  border: 1px solid var(--gris-borde);
-  border-radius: var(--radio);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
   padding: 20px;
   margin-bottom: 16px;
 }
@@ -101,6 +130,39 @@ textarea { resize: vertical; min-height: 70px; }
 .badge.resuelta { background: #e7f7ee; color: var(--verde); }
 .badge.correcto { background: #e7f7ee; color: var(--verde); }
 .badge.observado { background: #fdecea; color: var(--rojo); }
+
+/* Sistema de pills (guia de diseno ESTABLO v9) */
+.pill { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 600; border: 1px solid; }
+.pill-green { background: var(--green-soft); border-color: var(--green-line); color: #15803d; }
+.pill-amber { background: #fffbeb; border-color: #fde68a; color: #b45309; }
+.pill-red   { background: var(--red-soft); border-color: #fecaca; color: #b91c1c; }
+.pill-blue  { background: var(--blue-soft); border-color: var(--blue-line); color: #1d4ed8; }
+.pill-gray  { background: #f1f5f9; border-color: #e2e8f0; color: var(--ink-2); }
+.pill-purple{ background: #f5f3ff; border-color: #ddd6fe; color: #6d28d9; }
+
+/* Tarjetas de checklist (estilo "Editar Checklist") */
+.checklist-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+.checklist-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow); padding: 18px; display: flex; flex-direction: column; gap: 8px; }
+.checklist-card .cc-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.checklist-card .cc-codigo { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; color: var(--ink-3); font-weight: 600; }
+.checklist-card .cc-nombre { font-size: 15.5px; font-weight: 800; color: var(--ink); margin: 2px 0 4px; }
+.checklist-card .cc-meta { font-size: 12.5px; color: var(--ink-2); }
+.checklist-card .cc-preview { font-size: 12.5px; color: var(--ink-3); margin: 6px 0; line-height: 1.6; }
+.checklist-card .cc-botones { display: flex; gap: 8px; margin-top: 8px; }
+
+/* Editor de plantilla (secciones y pasos) */
+.plantilla-seccion { border: 1px solid var(--line); border-radius: var(--r-sm); padding: 14px; margin-bottom: 14px; background: #fbfcfd; }
+.plantilla-seccion .ps-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.plantilla-seccion .ps-nombre { font-weight: 700; font-size: 14px; flex: 1; border: none; background: transparent; padding: 4px 0; }
+.plantilla-seccion .ps-nombre:focus { outline: none; border-bottom: 1px solid var(--blue); }
+.plantilla-seccion .ps-acciones { display: flex; gap: 6px; align-items: center; }
+.plantilla-seccion .ps-acciones button { border: 1px solid var(--line); background: #fff; border-radius: 6px; width: 26px; height: 26px; cursor: pointer; font-size: 13px; }
+.plantilla-paso { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.plantilla-paso .pp-num { font-size: 12.5px; color: var(--ink-3); width: 18px; text-align: right; }
+.plantilla-paso input { flex: 1; }
+.plantilla-paso button { border: none; background: none; color: var(--red); cursor: pointer; font-weight: bold; font-size: 15px; padding: 0 6px; }
+.btn-agregar-paso { background: none; border: 1px dashed var(--line); color: var(--blue); border-radius: 6px; padding: 6px 10px; font-size: 13px; cursor: pointer; margin-top: 4px; }
+.btn-agregar-seccion { background: none; border: 1px dashed var(--line); color: var(--ink-2); border-radius: var(--r-sm); padding: 10px; font-size: 13.5px; cursor: pointer; width: 100%; text-align: center; }
 
 .grid-menu { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
 .grid-menu a { text-decoration: none; }

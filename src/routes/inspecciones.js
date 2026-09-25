@@ -170,7 +170,8 @@ router.get('/calendario/:equipo_id', requireAuth, async (req, res) => {
   const { anio, mes } = req.query; // mes 1-12, opcional: si no se manda, trae todo
 
   let query = `
-    SELECT i.id, i.folio, i.carpeta_fecha, i.total_observados, ct.codigo AS checklist_codigo, ct.nombre AS checklist_nombre
+    SELECT i.id, i.folio, i.carpeta_fecha, i.total_observados, ct.codigo AS checklist_codigo,
+           ct.codigo_corto, ct.nombre AS checklist_nombre, ct.es_preoperacional
     FROM inspecciones i
     JOIN inspeccion_equipos ie ON ie.inspeccion_id = i.id
     JOIN checklist_tipos ct ON ct.id = i.checklist_tipo_id

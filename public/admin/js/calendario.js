@@ -54,8 +54,8 @@ async function verCalendario() {
     div.textContent = d;
     const inspsDelDia = porDia[d];
     if (inspsDelDia && inspsDelDia.length > 0) {
-      const tienePre = inspsDelDia.some((i) => i.checklist_codigo.startsWith('01-01'));
-      const tieneMant = inspsDelDia.some((i) => !i.checklist_codigo.startsWith('01-01'));
+      const tienePre = inspsDelDia.some((i) => i.es_preoperacional);
+      const tieneMant = inspsDelDia.some((i) => !i.es_preoperacional);
       if (tienePre && tieneMant) div.classList.add('doble');
       else if (tienePre) div.classList.add('pre');
       else div.classList.add('mant');

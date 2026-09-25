@@ -69,6 +69,12 @@ apenas ingreses por primera vez.**
 6. Corre el seed una vez contra la base de Neon (puedes hacerlo desde tu máquina local
    apuntando `DATABASE_URL` a Neon, como en el paso 5, o desde el Shell de Render).
 
+## 6.1 Actualizaciones posteriores (migraciones)
+
+Cuando se agregan cambios que requieren nuevas columnas o tablas, se entrega un archivo
+`src/db/migracion_AAAA-MM-DD.sql`. Se pega y ejecuta una sola vez en el SQL Editor de Neon,
+igual que `schema.sql`, después de subir el código actualizado a GitHub/Render.
+
 ## 7. Uso
 
 - **Operadores:** entran por la URL raíz (`/`), inician sesión, eligen el checklist,

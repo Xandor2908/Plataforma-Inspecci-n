@@ -19,28 +19,44 @@
 
   <div class="card">
     <h2>Agregar equipo</h2>
-    <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap">
-      <div style="min-width:180px">
+    <p style="font-size:12.5px;color:var(--ink-3);margin-top:-6px">La nomenclatura se asigna automáticamente (ej. BRR-02) según el tipo elegido.</p>
+    <div class="grid-menu" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
+      <div>
         <label>Tipo</label>
-        <select id="sel-tipo"></select>
+        <select id="f-tipo"></select>
       </div>
-      <div style="min-width:160px">
-        <label>Nomenclatura (opcional)</label>
-        <input id="input-nom" placeholder="Autogenerada si se deja vacío">
+      <div>
+        <label>Marca</label>
+        <input id="f-marca" list="lista-marcas" placeholder="Ej. John Deere">
+        <datalist id="lista-marcas"></datalist>
       </div>
-      <div style="flex:1;min-width:160px">
-        <label>Nombre / alias (opcional)</label>
-        <input id="input-nombre">
+      <div>
+        <label>Modelo</label>
+        <input id="f-modelo" list="lista-modelos" placeholder="Ej. XR-200">
+        <datalist id="lista-modelos"></datalist>
       </div>
-      <button class="btn" id="btn-crear" style="margin-top:0">Agregar</button>
+      <div>
+        <label>N° Serie</label>
+        <input id="f-serie" placeholder="Ej. SN-88213">
+      </div>
+      <div>
+        <label>Fecha de ingreso</label>
+        <input id="f-fecha" type="date">
+      </div>
+      <div>
+        <label>Ubicación</label>
+        <input id="f-ubicacion" list="lista-ubicaciones" placeholder="Ej. Fundo Norte">
+        <datalist id="lista-ubicaciones"></datalist>
+      </div>
     </div>
     <div class="error-msg" id="crear-error"></div>
+    <button class="btn" id="btn-crear">Agregar equipo</button>
   </div>
 
   <div class="card">
     <h2>Equipos registrados</h2>
     <table class="tabla">
-      <thead><tr><th>Nomenclatura</th><th>Tipo</th><th>Alias</th><th>Estado</th><th>QR</th><th></th></tr></thead>
+      <thead><tr><th>Nomenclatura</th><th>Tipo</th><th>Marca</th><th>Modelo</th><th>N° Serie</th><th>Ubicación</th><th>Estado</th><th></th></tr></thead>
       <tbody id="tabla-equipos"></tbody>
     </table>
   </div>
@@ -52,6 +68,31 @@
     <h3 id="qr-modal-titulo"></h3>
     <img id="qr-modal-img" style="width:250px;height:250px">
     <div><button class="btn secundario" onclick="document.getElementById('modal-qr').style.display='none'">Cerrar</button></div>
+  </div>
+</div>
+
+<div id="modal-editar" style="display:none; position:fixed; inset:0; background:#0008; align-items:center; justify-content:center;">
+  <div class="card" style="max-width:420px; width:90%">
+    <h3>Editar equipo <span id="editar-nomenclatura"></span></h3>
+    <label>Marca</label>
+    <input id="e-marca" list="lista-marcas">
+    <label>Modelo</label>
+    <input id="e-modelo" list="lista-modelos">
+    <label>N° Serie</label>
+    <input id="e-serie">
+    <label>Fecha de ingreso</label>
+    <input id="e-fecha" type="date">
+    <label>Ubicación</label>
+    <input id="e-ubicacion" list="lista-ubicaciones">
+    <label>Estado</label>
+    <select id="e-estado">
+      <option value="activo">Activo</option>
+      <option value="mantenimiento">En mantenimiento</option>
+      <option value="baja">De baja</option>
+    </select>
+    <div class="error-msg" id="editar-error"></div>
+    <button class="btn" id="btn-guardar-edicion">Guardar cambios</button>
+    <button class="btn secundario" onclick="document.getElementById('modal-editar').style.display='none'">Cancelar</button>
   </div>
 </div>
 

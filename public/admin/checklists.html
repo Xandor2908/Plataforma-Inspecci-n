@@ -15,43 +15,55 @@
     &nbsp;·&nbsp;<button onclick="cerrarSesion()">Salir</button>
   </div>
 </header>
-<div class="container wide">
 
-  <div class="card">
-    <h2>Tipos de checklist</h2>
-    <table class="tabla">
-      <thead><tr><th>Código</th><th>Nombre</th><th>Estado</th><th></th><th></th></tr></thead>
-      <tbody id="tabla-checklists"></tbody>
-    </table>
+<!-- Vista de tarjetas -->
+<div class="container wide" id="vista-tarjetas">
+  <div class="card" style="display:flex; justify-content:space-between; align-items:center">
+    <div>
+      <h2 style="margin:0">Editar Checklist</h2>
+      <p style="font-size:12.5px;color:var(--ink-3);margin:4px 0 0">Plantillas por combinación de equipo, organizadas en secciones y pasos.</p>
+    </div>
+    <button class="btn verde" id="btn-nueva-plantilla" style="margin-top:0">+ Nueva plantilla</button>
   </div>
 
-  <div class="card" id="panel-items" style="display:none">
-    <h2 id="items-titulo"></h2>
-    <p style="font-size:13px;color:#6b7d8a">Un ítem por línea, con formato: <code>Categoría | Descripción del ítem</code></p>
-    <textarea id="items-textarea" rows="12"></textarea>
-    <div class="error-msg" id="items-error"></div>
-    <button class="btn" id="btn-guardar-items">Guardar ítems</button>
-    <button class="btn secundario" onclick="document.getElementById('panel-items').style.display='none'">Cerrar</button>
-  </div>
-
-  <div class="card">
-    <h2>Crear nuevo checklist</h2>
-    <label>Código</label>
-    <input id="nuevo-codigo" placeholder="Ej. 05">
-    <label>Nombre</label>
-    <input id="nuevo-nombre" placeholder="Ej. Checklist de equipo X">
-    <label>Orden (posición en el listado)</label>
-    <input id="nuevo-orden" type="number" value="0">
-    <label>Variantes de equipos requeridos</label>
-    <p style="font-size:12px;color:#6b7d8a;margin:2px 0">Una variante por línea, códigos de tipo separados por coma. Ej: <code>BRR,GEN,TAB,AZU</code></p>
-    <textarea id="nuevo-variantes" rows="3" placeholder="BRR,SST"></textarea>
-    <label>Ítems</label>
-    <textarea id="nuevo-items" rows="8" placeholder="Categoría | Descripción del ítem"></textarea>
-    <div class="error-msg" id="nuevo-error"></div>
-    <button class="btn" id="btn-crear-checklist">Crear checklist</button>
-  </div>
-
+  <div class="checklist-grid" id="grid-checklists"></div>
 </div>
+
+<!-- Vista de edicion de plantilla -->
+<div class="container" id="vista-editor" style="display:none">
+  <button class="btn secundario" id="btn-volver" style="margin-bottom:10px">‹ Volver a plantillas</button>
+  <div class="card">
+    <h2 style="margin-top:0">Editar plantilla</h2>
+    <p style="font-size:12.5px;color:var(--ink-3);margin-top:-8px">Organiza el checklist en secciones (por equipo o sistema) y sus pasos.</p>
+
+    <div class="grid-menu" style="grid-template-columns: 2fr 1fr; margin-bottom:10px">
+      <div>
+        <label>Nombre de la plantilla</label>
+        <input id="ed-nombre">
+      </div>
+      <div>
+        <label>Frecuencia</label>
+        <select id="ed-frecuencia">
+          <option>Diaria</option>
+          <option>Semanal</option>
+          <option>Mensual</option>
+        </select>
+      </div>
+    </div>
+
+    <label>Variantes de equipos requeridos</label>
+    <p style="font-size:12px;color:var(--ink-3);margin:2px 0">Una variante por línea, códigos separados por coma. Ej: <code>BRR,GEN,TAB,AZU</code></p>
+    <textarea id="ed-variantes" rows="2"></textarea>
+
+    <div id="ed-secciones" style="margin-top:16px"></div>
+    <button class="btn-agregar-seccion" id="btn-agregar-seccion">+ Agregar sección</button>
+
+    <div class="error-msg" id="ed-error" style="margin-top:10px"></div>
+    <button class="btn verde" id="btn-guardar-plantilla">Guardar plantilla</button>
+    <button class="btn secundario" id="btn-cancelar-plantilla">Cancelar</button>
+  </div>
+</div>
+
 <script src="../js/common.js"></script>
 <script src="js/checklists.js"></script>
 </body>
