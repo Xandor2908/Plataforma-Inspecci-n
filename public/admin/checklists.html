@@ -7,14 +7,7 @@
 <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
-<header class="topbar">
-  <h1>ESTABLO · Checklists</h1>
-  <div class="user-info">
-    <a href="dashboard.html" style="color:#fff;margin-right:10px">← Panel</a>
-    <span id="nombre-usuario"></span>
-    &nbsp;·&nbsp;<button onclick="cerrarSesion()">Salir</button>
-  </div>
-</header>
+<div id="page-content" style="display:none">
 
 <div class="container wide" id="vista-tarjetas">
   <div class="card" style="display:flex; justify-content:space-between; align-items:center">
@@ -67,6 +60,8 @@
     <button class="btn verde" id="btn-guardar-plantilla">Guardar plantilla</button>
     <button class="btn secundario" id="btn-cancelar-plantilla">Cancelar</button>
   </div>
+</div>
+
 </div>
 
 <script src="../js/common.js"></script>

@@ -1,6 +1,5 @@
 (async function init() {
-  const usuario = await requireSession('admin');
-  if (!usuario) return;
+  await initShell('calendario', 'Calendario');
 
   const hoy = new Date();
   document.getElementById('sel-anio').value = hoy.getFullYear();

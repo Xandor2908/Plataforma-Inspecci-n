@@ -2,8 +2,7 @@ let equipoEditandoId = null;
 let ultimaNomenclaturaQr = '';
 
 (async function init() {
-  const usuario = await requireSession('admin');
-  if (!usuario) return;
+  await initShell('equipos', 'Equipos');
   await cargarTipos();
   await cargarSugerencias();
   await cargarEquipos();

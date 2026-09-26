@@ -5,8 +5,7 @@ let secciones = []; // [{ nombre, pasos: [string, ...] }]
 let equiposSeleccionados = []; // array de tipo_codigo
 
 (async function init() {
-  const usuario = await requireSession('admin');
-  if (!usuario) return;
+  await initShell('checklists', 'Checklists');
   await cargarTiposEquipo();
   await cargarChecklists();
 

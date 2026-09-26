@@ -7,19 +7,46 @@
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-<div class="login-wrap">
-  <div class="login-box">
-    <h1>ESTABLO</h1>
-    <div class="subtitulo">Mantenimiento de equipos · Sobitec</div>
-    <form id="form-login">
-      <label for="usuario">Usuario</label>
-      <input id="usuario" name="usuario" autocomplete="username" required>
-      <label for="password">Contraseña</label>
-      <input id="password" name="password" type="password" autocomplete="current-password" required>
-      <div class="error-msg" id="error-msg"></div>
-      <button class="btn" type="submit" style="width:100%">Ingresar</button>
-    </form>
+<div class="login-split">
+
+  <div class="lp-izq">
+    <div>
+      <div class="lp-logo">
+        <div class="sb-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"/><circle cx="12" cy="12" r="2.6" fill="white" stroke="none"/></svg></div>
+        <div>
+          <div class="lp-title">ESTABLO</div>
+          <div class="lp-subtitle">Gestión de Mantenimiento</div>
+        </div>
+      </div>
+
+      <div class="lp-headline">Todos tus equipos, bajo control, turno a turno.</div>
+      <div class="lp-desc">Checklists por código QR, incidencias con fotos y alertas al instante, y un calendario de inspecciones por equipo, en un solo lugar.</div>
+
+      <ul class="lp-features">
+        <li><span class="lp-ic">✓</span> Checklists de inspección y mantenimiento por equipo</li>
+        <li><span class="lp-ic">📷</span> Incidencias con foto y alerta automática por Telegram</li>
+        <li><span class="lp-ic">📅</span> Calendario de inspecciones y estadísticas por equipo</li>
+      </ul>
+    </div>
+
+    <div class="lp-footer">ESTABLO © 2026 · Sobitec</div>
   </div>
+
+  <div class="lp-der">
+    <div class="lp-form">
+      <h1>Iniciar sesión</h1>
+      <div class="lp-form-sub">Ingresa con tu cuenta para continuar.</div>
+      <form id="form-login">
+        <label for="usuario">Usuario</label>
+        <input id="usuario" name="usuario" autocomplete="username" required>
+        <label for="password">Contraseña</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+        <div class="error-msg" id="error-msg"></div>
+        <button class="btn" type="submit" style="width:100%">Entrar al sistema</button>
+      </form>
+    </div>
+  </div>
+
 </div>
 <script src="js/login.js"></script>
 </body>

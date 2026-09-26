@@ -7,14 +7,11 @@
 <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
-<header class="topbar">
-  <h1>ESTABLO · Plataforma maestra</h1>
-  <div class="user-info">
-    <span id="nombre-usuario"></span>
-    &nbsp;·&nbsp;<button onclick="cerrarSesion()">Salir</button>
-  </div>
-</header>
-<div class="container wide">
+
+<div class="container wide" id="page-content" style="display:none">
+
+  <h2 style="margin-bottom:2px">Bienvenido 👋</h2>
+  <p style="color:var(--ink-3);margin-top:0">Este es el estado general de la plataforma ESTABLO.</p>
 
   <div class="stats-row" id="stats-row">
     <div class="stat-box"><div class="num" id="s-equipos">–</div><div class="label">Equipos activos</div></div>
@@ -24,9 +21,9 @@
   </div>
 
   <div class="grid-menu">
-    <a href="equipos.html"><div class="menu-card">🛠️ Equipos<br><span style="font-weight:400;font-size:12px">Registro, filtros y QR</span></div></a>
+    <a href="equipos.html"><div class="menu-card">📦 Equipos<br><span style="font-weight:400;font-size:12px">Registro, filtros y QR</span></div></a>
     <a href="checklists.html"><div class="menu-card">📋 Checklists<br><span style="font-weight:400;font-size:12px">Tipos y plantillas</span></div></a>
-    <a href="incidencias.html"><div class="menu-card">🚨 Incidencias<br><span style="font-weight:400;font-size:12px">Pendientes y resueltas</span></div></a>
+    <a href="incidencias.html"><div class="menu-card">⚠️ Incidencias<br><span style="font-weight:400;font-size:12px">Pendientes y resueltas</span></div></a>
     <a href="calendario.html"><div class="menu-card">📅 Calendario<br><span style="font-weight:400;font-size:12px">Inspecciones por equipo</span></div></a>
     <a href="usuarios.html"><div class="menu-card">👤 Usuarios<br><span style="font-weight:400;font-size:12px">Admin / Operador</span></div></a>
   </div>
@@ -41,11 +38,11 @@
   </div>
 
 </div>
+
 <script src="../js/common.js"></script>
 <script>
 (async function () {
-  const usuario = await requireSession('admin');
-  if (!usuario) return;
+  await initShell('inicio', 'Inicio');
   try {
     const res = await apiFetch('/api/dashboard/resumen');
     const r = await res.json();

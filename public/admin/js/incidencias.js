@@ -2,8 +2,7 @@ let filtroActual = '';
 let incidenciaActualId = null;
 
 (async function init() {
-  const usuario = await requireSession('admin');
-  if (!usuario) return;
+  await initShell('incidencias', 'Incidencias');
   await cargarIncidencias();
 
   document.querySelectorAll('[data-filtro]').forEach((btn) => {

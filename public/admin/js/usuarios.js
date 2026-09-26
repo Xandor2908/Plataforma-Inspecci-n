@@ -1,8 +1,7 @@
 let usuarioEditandoId = null;
 
 (async function init() {
-  const usuario = await requireSession('admin');
-  if (!usuario) return;
+  await initShell('usuarios', 'Usuarios');
   await cargarUsuarios();
 
   document.getElementById('btn-restablecer').addEventListener('click', () => {
