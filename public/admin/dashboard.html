@@ -15,15 +15,46 @@
   </div>
 </header>
 <div class="container wide">
+
+  <div class="stats-row" id="stats-row">
+    <div class="stat-box"><div class="num" id="s-equipos">–</div><div class="label">Equipos activos</div></div>
+    <div class="stat-box"><div class="num" id="s-incidencias">–</div><div class="label">Incidencias pendientes</div></div>
+    <div class="stat-box"><div class="num" id="s-checklists">–</div><div class="label">Checklists activos</div></div>
+    <div class="stat-box"><div class="num" id="s-inspecciones">–</div><div class="label">Inspecciones este mes</div></div>
+  </div>
+
   <div class="grid-menu">
-    <a href="equipos.html"><div class="menu-card">🛠️ Equipos<br><span style="font-weight:400;font-size:12px">Registro y QR</span></div></a>
+    <a href="equipos.html"><div class="menu-card">🛠️ Equipos<br><span style="font-weight:400;font-size:12px">Registro, filtros y QR</span></div></a>
     <a href="checklists.html"><div class="menu-card">📋 Checklists<br><span style="font-weight:400;font-size:12px">Tipos y plantillas</span></div></a>
     <a href="incidencias.html"><div class="menu-card">🚨 Incidencias<br><span style="font-weight:400;font-size:12px">Pendientes y resueltas</span></div></a>
     <a href="calendario.html"><div class="menu-card">📅 Calendario<br><span style="font-weight:400;font-size:12px">Inspecciones por equipo</span></div></a>
     <a href="usuarios.html"><div class="menu-card">👤 Usuarios<br><span style="font-weight:400;font-size:12px">Admin / Operador</span></div></a>
   </div>
+
+  <div class="card" style="margin-top:20px">
+    <h2 style="margin-top:0">Accesos rápidos</h2>
+    <div style="display:flex; gap:10px; flex-wrap:wrap">
+      <a class="btn small" href="checklists.html">+ Nueva plantilla de checklist</a>
+      <a class="btn small secundario" href="equipos.html">+ Agregar equipo</a>
+      <a class="btn small secundario" href="incidencias.html">Ver incidencias pendientes</a>
+    </div>
+  </div>
+
 </div>
 <script src="../js/common.js"></script>
-<script>requireSession('admin');</script>
+<script>
+(async function () {
+  const usuario = await requireSession('admin');
+  if (!usuario) return;
+  try {
+    const res = await apiFetch('/api/dashboard/resumen');
+    const r = await res.json();
+    document.getElementById('s-equipos').textContent = r.equipos_activos;
+    document.getElementById('s-incidencias').textContent = r.incidencias_pendientes;
+    document.getElementById('s-checklists').textContent = r.checklists_activos;
+    document.getElementById('s-inspecciones').textContent = r.inspecciones_mes;
+  } catch (e) { /* si falla, se quedan los guiones */ }
+})();
+</script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 let equipoEditandoId = null;
+let ultimaNomenclaturaQr = '';
 
 (async function init() {
   const usuario = await requireSession('admin');
@@ -6,13 +7,19 @@ let equipoEditandoId = null;
   await cargarTipos();
   await cargarSugerencias();
   await cargarEquipos();
+
+  ['filtro-tipo', 'filtro-marca', 'filtro-modelo', 'filtro-ubicacion', 'filtro-estado'].forEach((id) =>
+    document.getElementById(id).addEventListener('change', cargarEquipos)
+  );
+  document.getElementById('btn-imprimir-qr').addEventListener('click', imprimirQr);
 })();
 
 async function cargarTipos() {
   const res = await apiFetch('/api/equipos/tipos');
   const tipos = await res.json();
-  const sel = document.getElementById('f-tipo');
-  sel.innerHTML = tipos.map((t) => `<option value="${t.codigo}">${t.codigo} - ${t.nombre}</option>`).join('');
+  document.getElementById('f-tipo').innerHTML = tipos.map((t) => `<option value="${t.codigo}">${t.codigo} - ${t.nombre}</option>`).join('');
+  const filtroTipo = document.getElementById('filtro-tipo');
+  filtroTipo.innerHTML = '<option value="">Todos</option>' + tipos.map((t) => `<option value="${t.codigo}">${t.nombre}</option>`).join('');
 }
 
 async function cargarSugerencias() {
@@ -21,6 +28,11 @@ async function cargarSugerencias() {
     const valores = await res.json();
     const datalist = document.getElementById(`lista-${campo === 'ubicacion' ? 'ubicaciones' : campo + 's'}`);
     datalist.innerHTML = valores.map((v) => `<option value="${v}">`).join('');
+    const filtroId = campo === 'ubicacion' ? 'filtro-ubicacion' : `filtro-${campo}`;
+    const filtroSel = document.getElementById(filtroId);
+    const actual = filtroSel.value;
+    filtroSel.innerHTML = `<option value="">Todas</option>` + valores.map((v) => `<option value="${v}">${v}</option>`).join('');
+    filtroSel.value = actual;
   }
 }
 
@@ -34,9 +46,28 @@ function pillEstado(estado) {
   return `<span class="pill ${clase}">${texto}</span>`;
 }
 
+function filtrosActuales() {
+  const params = new URLSearchParams();
+  const mapa = { tipo: 'filtro-tipo', marca: 'filtro-marca', modelo: 'filtro-modelo', ubicacion: 'filtro-ubicacion', estado: 'filtro-estado' };
+  for (const [clave, id] of Object.entries(mapa)) {
+    const v = document.getElementById(id).value;
+    if (v) params.set(clave, v);
+  }
+  return params;
+}
+
+function actualizarLinksExportar() {
+  const qs = filtrosActuales().toString();
+  document.getElementById('link-excel').href = `/api/equipos/exportar/excel${qs ? '?' + qs : ''}`;
+  document.getElementById('link-pdf').href = `/api/equipos/exportar/pdf${qs ? '?' + qs : ''}`;
+}
+
 async function cargarEquipos() {
-  const res = await apiFetch('/api/equipos');
+  const qs = filtrosActuales().toString();
+  const res = await apiFetch(`/api/equipos${qs ? '?' + qs : ''}`);
   const equipos = await res.json();
+  actualizarLinksExportar();
+
   const tbody = document.getElementById('tabla-equipos');
   tbody.innerHTML = '';
   equipos.forEach((e) => {
@@ -65,9 +96,25 @@ async function cargarEquipos() {
 async function verQr(id) {
   const res = await apiFetch(`/api/equipos/${id}/qr`);
   const data = await res.json();
+  ultimaNomenclaturaQr = data.nomenclatura;
   document.getElementById('qr-modal-titulo').textContent = data.nomenclatura;
   document.getElementById('qr-modal-img').src = data.qr;
   document.getElementById('modal-qr').style.display = 'flex';
+}
+
+function imprimirQr() {
+  const img = document.getElementById('qr-modal-img').src;
+  const ventana = window.open('', '_blank', 'width=400,height=500');
+  ventana.document.write(`
+    <html><head><title>QR ${ultimaNomenclaturaQr}</title>
+    <style>body{font-family:sans-serif;text-align:center;padding-top:40px}img{width:280px;height:280px}h2{margin-bottom:20px}</style>
+    </head><body>
+    <h2>${ultimaNomenclaturaQr}</h2>
+    <img src="${img}">
+    <script>window.onload = () => { window.print(); }<\/script>
+    </body></html>
+  `);
+  ventana.document.close();
 }
 
 function abrirEdicion(equipo) {

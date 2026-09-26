@@ -164,6 +164,16 @@ textarea { resize: vertical; min-height: 70px; }
 .btn-agregar-paso { background: none; border: 1px dashed var(--line); color: var(--blue); border-radius: 6px; padding: 6px 10px; font-size: 13px; cursor: pointer; margin-top: 4px; }
 .btn-agregar-seccion { background: none; border: 1px dashed var(--line); color: var(--ink-2); border-radius: var(--r-sm); padding: 10px; font-size: 13.5px; cursor: pointer; width: 100%; text-align: center; }
 
+/* Selector de equipos implicados (botones toggle) */
+.equipo-toggle-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.equipo-toggle {
+  border: 1.5px solid var(--line); background: #fff; color: var(--ink-2);
+  border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: all .12s ease;
+}
+.equipo-toggle:hover { border-color: var(--blue); }
+.equipo-toggle.activo { background: var(--blue); border-color: var(--blue); color: #fff; }
+
 .grid-menu { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
 .grid-menu a { text-decoration: none; }
 .menu-card {
@@ -207,3 +217,36 @@ textarea { resize: vertical; min-height: 70px; }
 .stat-box .label { font-size: 12px; color: #6b7d8a; }
 
 #qr-reader { width: 100%; max-width: 340px; margin: 10px auto; }
+
+/* Impresión: oculta los botones al imprimir el QR */
+@media print {
+  body * { visibility: hidden; }
+  #qr-imprimible, #qr-imprimible * { visibility: visible; }
+  #qr-imprimible { position: absolute; top: 0; left: 0; width: 100%; }
+  .no-imprimir { display: none !important; }
+}
+
+/* Responsivo: moviles y tablets */
+@media (max-width: 720px) {
+  header.topbar { flex-wrap: wrap; gap: 6px; padding: 12px 14px; }
+  header.topbar h1 { font-size: 15px; }
+  .container, .container.wide { padding: 12px; }
+  .card { padding: 14px; }
+  .grid-menu { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .checklist-grid { grid-template-columns: 1fr; }
+  .stats-row { gap: 8px; }
+  .stat-box { min-width: calc(50% - 8px); padding: 12px 14px; }
+  .stat-box .num { font-size: 20px; }
+  .tabla { display: block; overflow-x: auto; white-space: nowrap; }
+  .item-fila { flex-wrap: wrap; }
+  .item-fila .opciones { width: 100%; justify-content: flex-start; }
+  .login-box { width: 92%; padding: 24px; }
+  .btn { width: auto; }
+  #paso-equipos .card > div[style*="flex"] { flex-wrap: wrap; }
+  .plantilla-paso input { min-width: 0; }
+}
+
+@media (max-width: 420px) {
+  .grid-menu { grid-template-columns: 1fr; }
+  .stat-box { min-width: 100%; }
+}

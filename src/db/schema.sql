@@ -37,8 +37,8 @@ CREATE TABLE IF NOT EXISTS checklist_tipos (
   codigo_corto      TEXT UNIQUE,            -- código visible corto, ej. 'C01'
   nombre            TEXT NOT NULL,          -- ej. 'Checklist de inspeccion pre-operacional de equipo HotSpot'
   frecuencia        TEXT NOT NULL DEFAULT 'Diaria',
-  es_preoperacional BOOLEAN NOT NULL DEFAULT FALSE,
-  equipos_variantes JSONB NOT NULL,         -- ver seed.js: lista de variantes, cada una es array de tipo_codigo requeridos
+  tipo_checklist    TEXT NOT NULL DEFAULT 'mantenimiento' CHECK (tipo_checklist IN ('preoperacional', 'mantenimiento')),
+  equipos_requeridos JSONB NOT NULL,        -- lista fija de tipo_codigo requeridos, ej. ["BRR","SST"]
   activo            BOOLEAN NOT NULL DEFAULT TRUE,
   orden             INTEGER NOT NULL DEFAULT 0,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now()

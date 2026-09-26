@@ -4,12 +4,11 @@ const { requireAuth, requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Listado de checklist tipos (para admin: todos con conteo de secciones/pasos; para operador: solo activos)
 router.get('/', requireAuth, async (req, res) => {
   const soloActivos = req.usuario.rol !== 'admin';
   const result = await pool.query(
-    `SELECT ct.id, ct.codigo, ct.codigo_corto, ct.nombre, ct.frecuencia, ct.equipos_variantes,
-            ct.activo, ct.orden, ct.es_preoperacional,
+    `SELECT ct.id, ct.codigo, ct.codigo_corto, ct.nombre, ct.frecuencia, ct.tipo_checklist,
+            ct.equipos_requeridos, ct.activo, ct.orden,
             COUNT(DISTINCT ci.categoria)::int AS total_secciones,
             COUNT(ci.id)::int AS total_pasos
      FROM checklist_tipos ct
@@ -21,7 +20,6 @@ router.get('/', requireAuth, async (req, res) => {
   res.json(result.rows);
 });
 
-// Detalle de un checklist tipo con sus items (agrupados por categoria/seccion en el cliente)
 router.get('/:id', requireAuth, async (req, res) => {
   const tipoRes = await pool.query('SELECT * FROM checklist_tipos WHERE id = $1', [req.params.id]);
   const tipo = tipoRes.rows[0];
@@ -42,29 +40,29 @@ async function siguienteCodigoCorto(client) {
   return 'C' + String(n).padStart(2, '0');
 }
 
-// --- Administración (crear / editar / duplicar / desactivar checklist tipos e items) ---
-
 router.post('/', requireAuth, requireAdmin, async (req, res) => {
-  const { nombre, equipos_variantes, orden, frecuencia, items } = req.body || {};
-  if (!nombre || !Array.isArray(equipos_variantes)) {
-    return res.status(400).json({ error: 'nombre y equipos_variantes son requeridos' });
+  const { nombre, equipos_requeridos, orden, frecuencia, tipo_checklist, items } = req.body || {};
+  if (!nombre || !Array.isArray(equipos_requeridos) || equipos_requeridos.length === 0) {
+    return res.status(400).json({ error: 'nombre y equipos_requeridos (al menos 1) son requeridos' });
+  }
+  if (!['preoperacional', 'mantenimiento'].includes(tipo_checklist)) {
+    return res.status(400).json({ error: 'tipo_checklist debe ser preoperacional o mantenimiento' });
   }
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
     const codigoCorto = await siguienteCodigoCorto(client);
     const tipoRes = await client.query(
-      `INSERT INTO checklist_tipos (codigo, codigo_corto, nombre, equipos_variantes, orden, frecuencia)
-       VALUES ($1, $1, $2, $3, $4, $5) RETURNING *`,
-      [codigoCorto, nombre, JSON.stringify(equipos_variantes), orden || 0, frecuencia || 'Diaria']
+      `INSERT INTO checklist_tipos (codigo, codigo_corto, nombre, equipos_requeridos, orden, frecuencia, tipo_checklist)
+       VALUES ($1, $1, $2, $3, $4, $5, $6) RETURNING *`,
+      [codigoCorto, nombre, JSON.stringify(equipos_requeridos), orden || 0, frecuencia || 'Diaria', tipo_checklist]
     );
     const tipo = tipoRes.rows[0];
     let orden_item = 0;
     for (const item of items || []) {
       orden_item += 1;
       await client.query(
-        `INSERT INTO checklist_items (checklist_tipo_id, categoria, orden, descripcion)
-         VALUES ($1, $2, $3, $4)`,
+        `INSERT INTO checklist_items (checklist_tipo_id, categoria, orden, descripcion) VALUES ($1, $2, $3, $4)`,
         [tipo.id, item.categoria, orden_item, item.descripcion]
       );
     }
@@ -80,22 +78,25 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
 });
 
 router.patch('/:id', requireAuth, requireAdmin, async (req, res) => {
-  const { nombre, equipos_variantes, activo, orden, frecuencia } = req.body || {};
+  const { nombre, equipos_requeridos, activo, orden, frecuencia, tipo_checklist } = req.body || {};
+  if (tipo_checklist && !['preoperacional', 'mantenimiento'].includes(tipo_checklist)) {
+    return res.status(400).json({ error: 'tipo_checklist inválido' });
+  }
   const result = await pool.query(
     `UPDATE checklist_tipos SET
        nombre = COALESCE($1, nombre),
-       equipos_variantes = COALESCE($2, equipos_variantes),
+       equipos_requeridos = COALESCE($2, equipos_requeridos),
        activo = COALESCE($3, activo),
        orden = COALESCE($4, orden),
-       frecuencia = COALESCE($5, frecuencia)
-     WHERE id = $6 RETURNING *`,
-    [nombre ?? null, equipos_variantes ? JSON.stringify(equipos_variantes) : null, activo ?? null, orden ?? null, frecuencia ?? null, req.params.id]
+       frecuencia = COALESCE($5, frecuencia),
+       tipo_checklist = COALESCE($6, tipo_checklist)
+     WHERE id = $7 RETURNING *`,
+    [nombre ?? null, equipos_requeridos ? JSON.stringify(equipos_requeridos) : null, activo ?? null, orden ?? null, frecuencia ?? null, tipo_checklist ?? null, req.params.id]
   );
   if (!result.rows[0]) return res.status(404).json({ error: 'Checklist no encontrado' });
   res.json(result.rows[0]);
 });
 
-// Reemplaza por completo las secciones/pasos (items) de un checklist tipo
 router.put('/:id/items', requireAuth, requireAdmin, async (req, res) => {
   const { items } = req.body || {};
   if (!Array.isArray(items)) return res.status(400).json({ error: 'items debe ser un arreglo' });
@@ -107,8 +108,7 @@ router.put('/:id/items', requireAuth, requireAdmin, async (req, res) => {
     for (const item of items) {
       orden += 1;
       await client.query(
-        `INSERT INTO checklist_items (checklist_tipo_id, categoria, orden, descripcion)
-         VALUES ($1, $2, $3, $4)`,
+        `INSERT INTO checklist_items (checklist_tipo_id, categoria, orden, descripcion) VALUES ($1, $2, $3, $4)`,
         [req.params.id, item.categoria, orden, item.descripcion]
       );
     }
@@ -123,7 +123,6 @@ router.put('/:id/items', requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
-// Duplica un checklist tipo completo (con sus items) como plantilla inactiva nueva
 router.post('/:id/duplicar', requireAuth, requireAdmin, async (req, res) => {
   const client = await pool.connect();
   try {
@@ -134,9 +133,9 @@ router.post('/:id/duplicar', requireAuth, requireAdmin, async (req, res) => {
 
     const codigoCorto = await siguienteCodigoCorto(client);
     const nuevoRes = await client.query(
-      `INSERT INTO checklist_tipos (codigo, codigo_corto, nombre, equipos_variantes, orden, frecuencia, activo)
-       VALUES ($1, $1, $2, $3, $4, $5, FALSE) RETURNING *`,
-      [codigoCorto, `${origen.nombre} (copia)`, JSON.stringify(origen.equipos_variantes), origen.orden, origen.frecuencia]
+      `INSERT INTO checklist_tipos (codigo, codigo_corto, nombre, equipos_requeridos, orden, frecuencia, tipo_checklist, activo)
+       VALUES ($1, $1, $2, $3, $4, $5, $6, FALSE) RETURNING *`,
+      [codigoCorto, `${origen.nombre} (copia)`, JSON.stringify(origen.equipos_requeridos), origen.orden, origen.frecuencia, origen.tipo_checklist]
     );
     const nuevo = nuevoRes.rows[0];
 

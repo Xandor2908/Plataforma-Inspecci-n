@@ -10,6 +10,7 @@ const checklistsRoutes = require('./routes/checklists');
 const inspeccionesRoutes = require('./routes/inspecciones');
 const incidenciasRoutes = require('./routes/incidencias');
 const usuariosRoutes = require('./routes/usuarios');
+const dashboardRoutes = require('./routes/dashboard');
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.use('/api/checklists', checklistsRoutes);
 app.use('/api/inspecciones', inspeccionesRoutes);
 app.use('/api/incidencias', incidenciasRoutes);
 app.use('/api/usuarios', usuariosRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 

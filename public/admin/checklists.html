@@ -16,7 +16,6 @@
   </div>
 </header>
 
-<!-- Vista de tarjetas -->
 <div class="container wide" id="vista-tarjetas">
   <div class="card" style="display:flex; justify-content:space-between; align-items:center">
     <div>
@@ -29,14 +28,13 @@
   <div class="checklist-grid" id="grid-checklists"></div>
 </div>
 
-<!-- Vista de edicion de plantilla -->
 <div class="container" id="vista-editor" style="display:none">
   <button class="btn secundario" id="btn-volver" style="margin-bottom:10px">‹ Volver a plantillas</button>
   <div class="card">
     <h2 style="margin-top:0">Editar plantilla</h2>
     <p style="font-size:12.5px;color:var(--ink-3);margin-top:-8px">Organiza el checklist en secciones (por equipo o sistema) y sus pasos.</p>
 
-    <div class="grid-menu" style="grid-template-columns: 2fr 1fr; margin-bottom:10px">
+    <div class="grid-menu" style="grid-template-columns: 2fr 1fr 1fr; margin-bottom:10px">
       <div>
         <label>Nombre de la plantilla</label>
         <input id="ed-nombre">
@@ -49,13 +47,20 @@
           <option>Mensual</option>
         </select>
       </div>
+      <div>
+        <label>Tipo de checklist</label>
+        <select id="ed-tipo-checklist">
+          <option value="preoperacional">Inspección pre-operacional</option>
+          <option value="mantenimiento">Mantenimiento</option>
+        </select>
+      </div>
     </div>
 
-    <label>Variantes de equipos requeridos</label>
-    <p style="font-size:12px;color:var(--ink-3);margin:2px 0">Una variante por línea, códigos separados por coma. Ej: <code>BRR,GEN,TAB,AZU</code></p>
-    <textarea id="ed-variantes" rows="2"></textarea>
+    <label>Selección de equipos implicados</label>
+    <p style="font-size:12px;color:var(--ink-3);margin:2px 0 8px">Toca los equipos que deben registrarse para completar este checklist.</p>
+    <div id="ed-equipos-botones" class="equipo-toggle-grid"></div>
 
-    <div id="ed-secciones" style="margin-top:16px"></div>
+    <div id="ed-secciones" style="margin-top:18px"></div>
     <button class="btn-agregar-seccion" id="btn-agregar-seccion">+ Agregar sección</button>
 
     <div class="error-msg" id="ed-error" style="margin-top:10px"></div>

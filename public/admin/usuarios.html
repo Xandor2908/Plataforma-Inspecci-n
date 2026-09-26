@@ -43,6 +43,40 @@
   </div>
 
 </div>
+
+<div id="modal-editar" style="display:none; position:fixed; inset:0; background:#0008; align-items:center; justify-content:center;">
+  <div class="card" style="max-width:400px; width:90%">
+    <h3>Editar usuario</h3>
+    <label>Nombre</label>
+    <input id="e-nombre">
+    <label>Rol</label>
+    <select id="e-rol">
+      <option value="operador">No admin (operador)</option>
+      <option value="admin">Admin</option>
+    </select>
+    <div class="error-msg" id="editar-error"></div>
+    <button class="btn" id="btn-guardar-usuario">Guardar cambios</button>
+    <hr style="margin:16px 0;border:none;border-top:1px solid var(--line)">
+    <button class="btn secundario" id="btn-restablecer">Restablecer contraseña</button>
+    <button class="btn secundario" onclick="document.getElementById('modal-editar').style.display='none'">Cerrar</button>
+  </div>
+</div>
+
+<div id="modal-restablecer" style="display:none; position:fixed; inset:0; background:#0008; align-items:center; justify-content:center;">
+  <div class="card" style="max-width:380px; width:90%">
+    <h3>Restablecer contraseña</h3>
+    <label>Nueva contraseña</label>
+    <div style="display:flex; gap:8px">
+      <input id="r-password" style="flex:1">
+      <button class="btn small secundario" id="btn-generar-password" style="margin-top:0">Generar</button>
+    </div>
+    <div class="error-msg" id="restablecer-error"></div>
+    <p style="font-size:12px;color:var(--ink-3)">Esta contraseña solo se mostrará esta vez. Anótala antes de cerrar.</p>
+    <button class="btn verde" id="btn-confirmar-restablecer">Guardar nueva contraseña</button>
+    <button class="btn secundario" onclick="document.getElementById('modal-restablecer').style.display='none'">Cancelar</button>
+  </div>
+</div>
+
 <script src="../js/common.js"></script>
 <script src="js/usuarios.js"></script>
 </body>

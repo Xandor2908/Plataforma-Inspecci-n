@@ -54,8 +54,44 @@
   </div>
 
   <div class="card">
-    <h2>Equipos registrados</h2>
-    <table class="tabla">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:14px">
+      <div>
+        <h2 style="margin-bottom:6px">Equipos registrados</h2>
+        <div style="display:flex; gap:10px; flex-wrap:wrap">
+          <div>
+            <label>Tipo</label>
+            <select id="filtro-tipo"><option value="">Todos</option></select>
+          </div>
+          <div>
+            <label>Marca</label>
+            <select id="filtro-marca"><option value="">Todas</option></select>
+          </div>
+          <div>
+            <label>Modelo</label>
+            <select id="filtro-modelo"><option value="">Todos</option></select>
+          </div>
+          <div>
+            <label>Ubicación</label>
+            <select id="filtro-ubicacion"><option value="">Todas</option></select>
+          </div>
+          <div>
+            <label>Estado</label>
+            <select id="filtro-estado">
+              <option value="">Todos</option>
+              <option value="activo">Activo</option>
+              <option value="mantenimiento">En mantenimiento</option>
+              <option value="baja">De baja</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px">
+        <a class="btn small secundario" id="link-excel" style="margin-top:0">⬇ Excel</a>
+        <a class="btn small secundario" id="link-pdf" style="margin-top:0">⬇ PDF</a>
+      </div>
+    </div>
+
+    <table class="tabla" style="margin-top:14px">
       <thead><tr><th>Nomenclatura</th><th>Tipo</th><th>Marca</th><th>Modelo</th><th>N° Serie</th><th>Ubicación</th><th>Estado</th><th></th></tr></thead>
       <tbody id="tabla-equipos"></tbody>
     </table>
@@ -64,10 +100,13 @@
 </div>
 
 <div id="modal-qr" style="display:none; position:fixed; inset:0; background:#0008; align-items:center; justify-content:center;">
-  <div class="card" style="text-align:center">
+  <div class="card" style="text-align:center" id="qr-imprimible">
     <h3 id="qr-modal-titulo"></h3>
     <img id="qr-modal-img" style="width:250px;height:250px">
-    <div><button class="btn secundario" onclick="document.getElementById('modal-qr').style.display='none'">Cerrar</button></div>
+    <div style="display:flex; gap:8px; justify-content:center; margin-top:10px" class="no-imprimir">
+      <button class="btn small" id="btn-imprimir-qr">Imprimir</button>
+      <button class="btn small secundario" onclick="document.getElementById('modal-qr').style.display='none'">Cerrar</button>
+    </div>
   </div>
 </div>
 

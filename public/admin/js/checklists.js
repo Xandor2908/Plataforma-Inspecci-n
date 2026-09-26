@@ -1,10 +1,13 @@
 let checklistsCache = [];
+let tiposEquipoCache = [];
 let editandoId = null; // null = nueva plantilla
 let secciones = []; // [{ nombre, pasos: [string, ...] }]
+let equiposSeleccionados = []; // array de tipo_codigo
 
 (async function init() {
   const usuario = await requireSession('admin');
   if (!usuario) return;
+  await cargarTiposEquipo();
   await cargarChecklists();
 
   document.getElementById('btn-nueva-plantilla').addEventListener('click', () => abrirEditor(null));
@@ -16,6 +19,11 @@ let secciones = []; // [{ nombre, pasos: [string, ...] }]
   });
   document.getElementById('btn-guardar-plantilla').addEventListener('click', guardarPlantilla);
 })();
+
+async function cargarTiposEquipo() {
+  const res = await apiFetch('/api/equipos/tipos');
+  tiposEquipoCache = await res.json();
+}
 
 function volverATarjetas() {
   document.getElementById('vista-editor').style.display = 'none';
@@ -30,13 +38,17 @@ async function cargarChecklists() {
   checklistsCache.forEach((c) => {
     const div = document.createElement('div');
     div.className = 'checklist-card';
+    const tipoTexto = c.tipo_checklist === 'preoperacional' ? 'Pre-operacional' : 'Mantenimiento';
     div.innerHTML = `
       <div class="cc-top">
         <span class="cc-codigo">${c.codigo_corto || c.codigo}</span>
         <span class="pill ${c.activo ? 'pill-green' : 'pill-gray'}">${c.activo ? 'Activa' : 'Inactiva'}</span>
       </div>
       <div class="cc-nombre">${c.nombre}</div>
-      <div class="cc-meta">${c.total_secciones} secciones · ${c.total_pasos} pasos · Frecuencia ${c.frecuencia}</div>
+      <div class="cc-meta">
+        <span class="pill ${c.tipo_checklist === 'preoperacional' ? 'pill-blue' : 'pill-amber'}" style="margin-right:6px">${tipoTexto}</span>
+        ${c.total_secciones} secciones · ${c.total_pasos} pasos · ${c.frecuencia}
+      </div>
       <div class="cc-preview" data-preview="${c.id}">Cargando vista previa…</div>
       <div class="cc-botones">
         <button class="btn small" data-action="editar" data-id="${c.id}">Editar</button>
@@ -84,6 +96,27 @@ async function duplicar(id) {
   await cargarChecklists();
 }
 
+function renderBotonesEquipo() {
+  const cont = document.getElementById('ed-equipos-botones');
+  cont.innerHTML = '';
+  tiposEquipoCache.forEach((t) => {
+    const activo = equiposSeleccionados.includes(t.codigo);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `equipo-toggle ${activo ? 'activo' : ''}`;
+    btn.textContent = `${t.codigo} · ${t.nombre}`;
+    btn.addEventListener('click', () => {
+      if (equiposSeleccionados.includes(t.codigo)) {
+        equiposSeleccionados = equiposSeleccionados.filter((c) => c !== t.codigo);
+      } else {
+        equiposSeleccionados.push(t.codigo);
+      }
+      renderBotonesEquipo();
+    });
+    cont.appendChild(btn);
+  });
+}
+
 async function abrirEditor(id) {
   editandoId = id;
   document.getElementById('vista-tarjetas').style.display = 'none';
@@ -95,7 +128,8 @@ async function abrirEditor(id) {
     const detalle = await res.json();
     document.getElementById('ed-nombre').value = detalle.nombre;
     document.getElementById('ed-frecuencia').value = detalle.frecuencia;
-    document.getElementById('ed-variantes').value = (detalle.equipos_variantes || []).map((v) => v.join(',')).join('\n');
+    document.getElementById('ed-tipo-checklist').value = detalle.tipo_checklist;
+    equiposSeleccionados = [...detalle.equipos_requeridos];
 
     secciones = [];
     let actual = null;
@@ -109,9 +143,11 @@ async function abrirEditor(id) {
   } else {
     document.getElementById('ed-nombre').value = '';
     document.getElementById('ed-frecuencia').value = 'Diaria';
-    document.getElementById('ed-variantes').value = '';
+    document.getElementById('ed-tipo-checklist').value = 'mantenimiento';
+    equiposSeleccionados = [];
     secciones = [];
   }
+  renderBotonesEquipo();
   renderSecciones();
 }
 
@@ -127,7 +163,7 @@ function renderSecciones() {
         <div class="ps-acciones">
           <button data-accion="subir" data-si="${si}" title="Subir sección">↑</button>
           <button data-accion="bajar" data-si="${si}" title="Bajar sección">↓</button>
-          <button data-accion="quitar-seccion" data-si="${si}" title="Quitar sección" style="color:var(--red)">✕ Quitar sección</button>
+          <button data-accion="quitar-seccion" data-si="${si}" title="Quitar sección" style="color:var(--red)">✕</button>
         </div>
       </div>
       <div class="ps-pasos"></div>
@@ -140,7 +176,7 @@ function renderSecciones() {
       fila.innerHTML = `
         <span class="pp-num">${pi + 1}.</span>
         <input value="${paso.replace(/"/g, '&quot;')}" data-si="${si}" data-pi="${pi}">
-        <button data-accion="quitar-paso" data-si="${si}" data-pi="${pi}">✕</button>
+        <button data-accion="quitar-paso" data-si="${si}" data-pi="${pi}" title="Quitar paso">✕</button>
       `;
       pasosCont.appendChild(fila);
     });
@@ -195,16 +231,11 @@ async function guardarPlantilla() {
 
   const nombre = document.getElementById('ed-nombre').value.trim();
   const frecuencia = document.getElementById('ed-frecuencia').value;
-  const variantesTexto = document.getElementById('ed-variantes').value.trim();
+  const tipo_checklist = document.getElementById('ed-tipo-checklist').value;
 
   if (!nombre) { errorEl.textContent = 'El nombre de la plantilla es requerido'; return; }
-  if (!variantesTexto) { errorEl.textContent = 'Agrega al menos una variante de equipos'; return; }
+  if (equiposSeleccionados.length === 0) { errorEl.textContent = 'Selecciona al menos un equipo implicado'; return; }
   if (secciones.length === 0) { errorEl.textContent = 'Agrega al menos una sección'; return; }
-
-  const equipos_variantes = variantesTexto
-    .split('\n')
-    .map((l) => l.split(',').map((c) => c.trim().toUpperCase()).filter(Boolean))
-    .filter((v) => v.length > 0);
 
   const items = [];
   secciones.forEach((s) => {
@@ -217,14 +248,14 @@ async function guardarPlantilla() {
     const res = await apiFetch(`/api/checklists/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre, frecuencia, equipos_variantes }),
+      body: JSON.stringify({ nombre, frecuencia, tipo_checklist, equipos_requeridos: equiposSeleccionados }),
     });
     if (!res.ok) { errorEl.textContent = 'No se pudo guardar la plantilla'; return; }
   } else {
     const res = await apiFetch('/api/checklists', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre, frecuencia, equipos_variantes, items: [] }),
+      body: JSON.stringify({ nombre, frecuencia, tipo_checklist, equipos_requeridos: equiposSeleccionados, items: [] }),
     });
     const data = await res.json();
     if (!res.ok) { errorEl.textContent = data.error || 'No se pudo crear la plantilla'; return; }

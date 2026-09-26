@@ -24,19 +24,12 @@
 
   <div class="card" id="paso-equipos" style="display:none">
     <h2>2. Ingresa los equipos: <span id="checklist-seleccionado-nombre"></span></h2>
-    <p style="font-size:13px;color:#6b7d8a">Ingresa la nomenclatura de cada equipo (ej. BRR-01) o escanéalo con el QR.</p>
+    <p style="font-size:13px;color:var(--ink-3)">Ingresa la nomenclatura de cada equipo o escanéalo con el QR.</p>
 
-    <div style="display:flex; gap:8px;">
-      <input id="input-nomenclatura" placeholder="Ej. BRR-01" style="flex:1">
-      <button class="btn" id="btn-agregar-equipo" style="margin-top:0">Agregar</button>
-      <button class="btn secundario" id="btn-escanear" style="margin-top:0">Escanear QR</button>
-    </div>
-    <div class="error-msg" id="equipo-error"></div>
+    <div id="filas-equipos"></div>
 
     <div id="qr-reader" style="display:none"></div>
     <button class="btn secundario" id="btn-cerrar-scanner" style="display:none">Cerrar cámara</button>
-
-    <div id="chips-equipos" style="margin-top:14px"></div>
 
     <div class="error-msg" id="continuar-error"></div>
     <button class="btn" id="btn-continuar">Continuar</button>

@@ -9,43 +9,29 @@ const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 } });
 
 // Dado un checklist_tipo y la lista de tipo_codigo ya ingresados, evalua contra
-// las variantes definidas y responde si esta completo o cuantos equipos faltan.
+// el conjunto fijo de equipos requeridos y responde si esta completo o cuantos equipos faltan.
 router.post('/validar-equipos', requireAuth, async (req, res) => {
   const { checklist_tipo_id, tipo_codigos } = req.body || {};
   if (!checklist_tipo_id || !Array.isArray(tipo_codigos)) {
     return res.status(400).json({ error: 'checklist_tipo_id y tipo_codigos son requeridos' });
   }
-  const tipoRes = await pool.query('SELECT equipos_variantes FROM checklist_tipos WHERE id = $1', [checklist_tipo_id]);
+  const tipoRes = await pool.query('SELECT equipos_requeridos FROM checklist_tipos WHERE id = $1', [checklist_tipo_id]);
   const tipo = tipoRes.rows[0];
   if (!tipo) return res.status(404).json({ error: 'Checklist no encontrado' });
 
-  const ingresados = [...tipo_codigos].sort();
-  const variantes = tipo.equipos_variantes; // array de arrays de tipo_codigo
+  const requeridos = tipo.equipos_requeridos; // array plano de tipo_codigo, ej. ["BRR","SST"]
+  const ingresados = [...new Set(tipo_codigos)];
 
-  // Coincidencia exacta con alguna variante
-  for (const variante of variantes) {
-    const v = [...variante].sort();
-    if (v.length === ingresados.length && v.every((c, i) => c === ingresados[i])) {
-      return res.json({ completo: true });
-    }
-  }
-
-  // Si no está completo, buscamos la variante compatible (superconjunto de lo ingresado)
-  // con menos faltantes, para indicar "Faltan # equipos para agregar"
-  let mejorFaltantes = null;
-  for (const variante of variantes) {
-    const esSubconjunto = ingresados.every((c) => variante.includes(c));
-    if (!esSubconjunto) continue; // el operador ingresó algo que no pertenece a esta variante
-    const faltantes = variante.filter((c) => !ingresados.includes(c));
-    if (mejorFaltantes === null || faltantes.length < mejorFaltantes.length) {
-      mejorFaltantes = faltantes;
-    }
-  }
-
-  if (mejorFaltantes === null) {
+  const noPertenecen = ingresados.filter((c) => !requeridos.includes(c));
+  if (noPertenecen.length > 0) {
     return res.json({ completo: false, error: 'Los equipos ingresados no corresponden a este checklist' });
   }
-  res.json({ completo: false, faltan: mejorFaltantes.length, tipos_faltantes: mejorFaltantes });
+
+  const faltantes = requeridos.filter((c) => !ingresados.includes(c));
+  if (faltantes.length === 0) {
+    return res.json({ completo: true });
+  }
+  res.json({ completo: false, faltan: faltantes.length, tipos_faltantes: faltantes });
 });
 
 // Envio del checklist completo. multipart/form-data:
@@ -141,15 +127,16 @@ router.post('/', requireAuth, upload.any(), async (req, res) => {
       );
       const equiposTexto = equiposRes.rows.map((e) => e.nomenclatura).join(', ');
       for (const inc of incidenciasCreadas) {
-        await enviarAlertaTelegram(
-          textoAlertaIncidencia({
+        await enviarAlertaTelegram({
+          texto: textoAlertaIncidencia({
             codigo: inc.codigo,
             checklistNombre: checklistRes.rows[0]?.nombre || '',
             equiposTexto,
             descripcion: inc.descripcion,
             folio,
-          })
-        );
+          }),
+          fotoUrl: inc.foto_url,
+        });
       }
     }
 
@@ -171,7 +158,7 @@ router.get('/calendario/:equipo_id', requireAuth, async (req, res) => {
 
   let query = `
     SELECT i.id, i.folio, i.carpeta_fecha, i.total_observados, ct.codigo AS checklist_codigo,
-           ct.codigo_corto, ct.nombre AS checklist_nombre, ct.es_preoperacional
+           ct.codigo_corto, ct.nombre AS checklist_nombre, ct.tipo_checklist
     FROM inspecciones i
     JOIN inspeccion_equipos ie ON ie.inspeccion_id = i.id
     JOIN checklist_tipos ct ON ct.id = i.checklist_tipo_id
