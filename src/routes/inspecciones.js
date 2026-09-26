@@ -4,6 +4,7 @@ const pool = require('../db/pool');
 const { requireAuth } = require('../middleware/auth');
 const { subirImagen } = require('../cloudinary');
 const { enviarAlertaTelegram, textoAlertaIncidencia } = require('../telegram');
+const { limpiarTexto } = require('../utils');
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 } });
@@ -97,7 +98,7 @@ router.post('/', requireAuth, upload.any(), async (req, res) => {
         `INSERT INTO inspeccion_respuestas
            (inspeccion_id, checklist_item_id, resultado, observacion_texto, observacion_foto_url)
          VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-        [inspeccion.id, r.checklist_item_id, r.resultado, r.observacion_texto || null, fotoUrl]
+        [inspeccion.id, r.checklist_item_id, r.resultado, limpiarTexto(r.observacion_texto) || null, fotoUrl]
       );
 
       if (r.resultado === 'observado') {
@@ -108,7 +109,7 @@ router.post('/', requireAuth, upload.any(), async (req, res) => {
         const incRes = await client.query(
           `INSERT INTO incidencias (codigo, inspeccion_respuesta_id, inspeccion_id, descripcion, foto_url)
            VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-          [codigo, respRes.rows[0].id, inspeccion.id, r.observacion_texto || '(sin descripción)', fotoUrl]
+          [codigo, respRes.rows[0].id, inspeccion.id, limpiarTexto(r.observacion_texto) || '(sin descripción)', fotoUrl]
         );
         incidenciasCreadas.push(incRes.rows[0]);
       }

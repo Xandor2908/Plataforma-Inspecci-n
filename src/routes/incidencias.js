@@ -1,6 +1,7 @@
 const express = require('express');
 const pool = require('../db/pool');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
+const { limpiarTexto } = require('../utils');
 
 const router = express.Router();
 
@@ -45,7 +46,7 @@ router.patch('/:id/resolver', requireAuth, requireAdmin, async (req, res) => {
   const result = await pool.query(
     `UPDATE incidencias SET estado = 'resuelta', solucion_texto = $1, resuelto_por = $2, resuelto_en = now()
      WHERE id = $3 RETURNING *`,
-    [solucion_texto, req.usuario.id, req.params.id]
+    [limpiarTexto(solucion_texto), req.usuario.id, req.params.id]
   );
   if (!result.rows[0]) return res.status(404).json({ error: 'Incidencia no encontrada' });
   res.json(result.rows[0]);

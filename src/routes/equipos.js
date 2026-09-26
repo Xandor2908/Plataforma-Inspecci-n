@@ -4,6 +4,7 @@ const XLSX = require('xlsx');
 const PDFDocument = require('pdfkit');
 const pool = require('../db/pool');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
+const { limpiarTexto } = require('../utils');
 
 const router = express.Router();
 
@@ -127,7 +128,7 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
     const result = await pool.query(
       `INSERT INTO equipos (nomenclatura, tipo_codigo, marca, modelo, n_serie, fecha_ingreso, ubicacion)
        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [nomenclatura, tipo_codigo, marca || null, modelo || null, n_serie || null, fecha_ingreso || null, ubicacion || null]
+      [nomenclatura, tipo_codigo, limpiarTexto(marca) || null, limpiarTexto(modelo) || null, limpiarTexto(n_serie) || null, fecha_ingreso || null, limpiarTexto(ubicacion) || null]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -153,7 +154,7 @@ router.patch('/:id', requireAuth, requireAdmin, async (req, res) => {
        ubicacion = COALESCE($5, ubicacion),
        estado = COALESCE($6, estado)
      WHERE id = $7 RETURNING *`,
-    [marca ?? null, modelo ?? null, n_serie ?? null, fecha_ingreso ?? null, ubicacion ?? null, estado ?? null, req.params.id]
+    [limpiarTexto(marca) ?? null, limpiarTexto(modelo) ?? null, limpiarTexto(n_serie) ?? null, fecha_ingreso ?? null, limpiarTexto(ubicacion) ?? null, estado ?? null, req.params.id]
   );
   if (!result.rows[0]) return res.status(404).json({ error: 'Equipo no encontrado' });
   res.json(result.rows[0]);

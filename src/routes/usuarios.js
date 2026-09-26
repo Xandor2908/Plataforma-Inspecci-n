@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const pool = require('../db/pool');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
+const { limpiarTexto } = require('../utils');
 
 const router = express.Router();
 
@@ -22,7 +23,7 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
     const result = await pool.query(
       `INSERT INTO usuarios (nombre, usuario, password_hash, rol) VALUES ($1, $2, $3, $4)
        RETURNING id, nombre, usuario, rol, activo, created_at`,
-      [nombre, usuario, hash, rol]
+      [limpiarTexto(nombre), usuario, hash, rol]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -37,7 +38,7 @@ router.patch('/:id', requireAuth, requireAdmin, async (req, res) => {
   const fields = [];
   const values = [];
   let i = 1;
-  if (nombre !== undefined) { fields.push(`nombre = $${i++}`); values.push(nombre); }
+  if (nombre !== undefined) { fields.push(`nombre = $${i++}`); values.push(limpiarTexto(nombre)); }
   if (rol !== undefined) { fields.push(`rol = $${i++}`); values.push(rol); }
   if (activo !== undefined) { fields.push(`activo = $${i++}`); values.push(activo); }
   if (password) { fields.push(`password_hash = $${i++}`); values.push(await bcrypt.hash(password, 10)); }

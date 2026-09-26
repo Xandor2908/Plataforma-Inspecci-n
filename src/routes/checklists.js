@@ -1,6 +1,7 @@
 const express = require('express');
 const pool = require('../db/pool');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
+const { limpiarTexto } = require('../utils');
 
 const router = express.Router();
 
@@ -55,7 +56,7 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
     const tipoRes = await client.query(
       `INSERT INTO checklist_tipos (codigo, codigo_corto, nombre, equipos_requeridos, orden, frecuencia, tipo_checklist)
        VALUES ($1, $1, $2, $3, $4, $5, $6) RETURNING *`,
-      [codigoCorto, nombre, JSON.stringify(equipos_requeridos), orden || 0, frecuencia || 'Diaria', tipo_checklist]
+      [codigoCorto, limpiarTexto(nombre), JSON.stringify(equipos_requeridos), orden || 0, frecuencia || 'Diaria', tipo_checklist]
     );
     const tipo = tipoRes.rows[0];
     let orden_item = 0;
@@ -63,7 +64,7 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
       orden_item += 1;
       await client.query(
         `INSERT INTO checklist_items (checklist_tipo_id, categoria, orden, descripcion) VALUES ($1, $2, $3, $4)`,
-        [tipo.id, item.categoria, orden_item, item.descripcion]
+        [tipo.id, limpiarTexto(item.categoria), orden_item, limpiarTexto(item.descripcion)]
       );
     }
     await client.query('COMMIT');
@@ -71,7 +72,7 @@ router.post('/', requireAuth, requireAdmin, async (req, res) => {
   } catch (err) {
     await client.query('ROLLBACK');
     console.error(err);
-    res.status(500).json({ error: 'Error del servidor' });
+    res.status(500).json({ error: 'Error del servidor', detalle: err.message, codigo: err.code });
   } finally {
     client.release();
   }
@@ -91,7 +92,7 @@ router.patch('/:id', requireAuth, requireAdmin, async (req, res) => {
        frecuencia = COALESCE($5, frecuencia),
        tipo_checklist = COALESCE($6, tipo_checklist)
      WHERE id = $7 RETURNING *`,
-    [nombre ?? null, equipos_requeridos ? JSON.stringify(equipos_requeridos) : null, activo ?? null, orden ?? null, frecuencia ?? null, tipo_checklist ?? null, req.params.id]
+    [nombre ? limpiarTexto(nombre) : null, equipos_requeridos ? JSON.stringify(equipos_requeridos) : null, activo ?? null, orden ?? null, frecuencia ?? null, tipo_checklist ?? null, req.params.id]
   );
   if (!result.rows[0]) return res.status(404).json({ error: 'Checklist no encontrado' });
   res.json(result.rows[0]);
@@ -109,7 +110,7 @@ router.put('/:id/items', requireAuth, requireAdmin, async (req, res) => {
       orden += 1;
       await client.query(
         `INSERT INTO checklist_items (checklist_tipo_id, categoria, orden, descripcion) VALUES ($1, $2, $3, $4)`,
-        [req.params.id, item.categoria, orden, item.descripcion]
+        [req.params.id, limpiarTexto(item.categoria), orden, limpiarTexto(item.descripcion)]
       );
     }
     await client.query('COMMIT');
@@ -117,7 +118,7 @@ router.put('/:id/items', requireAuth, requireAdmin, async (req, res) => {
   } catch (err) {
     await client.query('ROLLBACK');
     console.error(err);
-    res.status(500).json({ error: 'Error del servidor' });
+    res.status(500).json({ error: 'Error del servidor', detalle: err.message, codigo: err.code });
   } finally {
     client.release();
   }
@@ -146,7 +147,7 @@ router.post('/:id/duplicar', requireAuth, requireAdmin, async (req, res) => {
     for (const item of itemsRes.rows) {
       await client.query(
         `INSERT INTO checklist_items (checklist_tipo_id, categoria, orden, descripcion) VALUES ($1, $2, $3, $4)`,
-        [nuevo.id, item.categoria, item.orden, item.descripcion]
+        [nuevo.id, limpiarTexto(item.categoria), item.orden, limpiarTexto(item.descripcion)]
       );
     }
     await client.query('COMMIT');
