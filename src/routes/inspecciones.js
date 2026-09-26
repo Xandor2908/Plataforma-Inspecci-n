@@ -85,6 +85,17 @@ router.post('/', requireAuth, upload.any(), async (req, res) => {
       if (match) archivosPorItem[match[1]] = f;
     }
 
+    // Datos actuales de los items (categoria/descripcion/orden) para dejar un
+    // "snapshot" en cada respuesta: si luego se edita la plantilla, esta respuesta
+    // ya guardada no se ve afectada.
+    const itemIds = respuestas.map((r) => r.checklist_item_id);
+    const itemsInfoRes = await client.query(
+      `SELECT id, categoria, descripcion, orden FROM checklist_items WHERE id = ANY($1::int[])`,
+      [itemIds]
+    );
+    const itemsInfo = {};
+    itemsInfoRes.rows.forEach((it) => { itemsInfo[it.id] = it; });
+
     const incidenciasCreadas = [];
 
     for (const r of respuestas) {
@@ -94,11 +105,15 @@ router.post('/', requireAuth, upload.any(), async (req, res) => {
         fotoUrl = await subirImagen(archivo.buffer, 'establo/observaciones');
       }
 
+      const infoItem = itemsInfo[r.checklist_item_id] || {};
+
       const respRes = await client.query(
         `INSERT INTO inspeccion_respuestas
-           (inspeccion_id, checklist_item_id, resultado, observacion_texto, observacion_foto_url)
-         VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-        [inspeccion.id, r.checklist_item_id, r.resultado, limpiarTexto(r.observacion_texto) || null, fotoUrl]
+           (inspeccion_id, checklist_item_id, resultado, observacion_texto, observacion_foto_url,
+            categoria_snapshot, descripcion_snapshot, orden_snapshot)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+        [inspeccion.id, r.checklist_item_id, r.resultado, limpiarTexto(r.observacion_texto) || null, fotoUrl,
+         infoItem.categoria || null, infoItem.descripcion || null, infoItem.orden ?? null]
       );
 
       if (r.resultado === 'observado') {
@@ -207,9 +222,12 @@ router.get('/:id', requireAuth, async (req, res) => {
     [req.params.id]
   );
   const respuestasRes = await pool.query(
-    `SELECT r.*, ci.categoria, ci.descripcion AS item_descripcion, ci.orden
-     FROM inspeccion_respuestas r JOIN checklist_items ci ON ci.id = r.checklist_item_id
-     WHERE r.inspeccion_id = $1 ORDER BY ci.orden`,
+    `SELECT r.*,
+            COALESCE(ci.categoria, r.categoria_snapshot) AS categoria,
+            COALESCE(ci.descripcion, r.descripcion_snapshot) AS item_descripcion,
+            COALESCE(ci.orden, r.orden_snapshot, 0) AS orden
+     FROM inspeccion_respuestas r LEFT JOIN checklist_items ci ON ci.id = r.checklist_item_id
+     WHERE r.inspeccion_id = $1 ORDER BY orden`,
     [req.params.id]
   );
 

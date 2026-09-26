@@ -73,11 +73,16 @@ CREATE TABLE IF NOT EXISTS inspeccion_equipos (
 
 CREATE TABLE IF NOT EXISTS inspeccion_respuestas (
   id                 SERIAL PRIMARY KEY,
-  inspeccion_id      INTEGER NOT NULL REFERENCES inspecciones(id) ON DELETE CASCADE,
-  checklist_item_id  INTEGER NOT NULL REFERENCES checklist_items(id),
+  inspeccion_id      INTEGER NOT NULL REFERENCES inspecciones(id),
+  checklist_item_id  INTEGER REFERENCES checklist_items(id) ON DELETE SET NULL,
   resultado          TEXT NOT NULL CHECK (resultado IN ('correcto', 'observado')),
   observacion_texto  TEXT,
-  observacion_foto_url TEXT
+  observacion_foto_url TEXT,
+  -- "Foto" del paso al momento de responder, para que editar la plantilla despues
+  -- (agregar/quitar/modificar pasos) nunca rompa el historial de esta respuesta.
+  categoria_snapshot   TEXT,
+  descripcion_snapshot TEXT,
+  orden_snapshot       INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS incidencias (
