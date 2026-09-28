@@ -26,8 +26,14 @@ async function cerrarSesion() {
 }
 
 function formatearFecha(fechaISO) {
-  const d = new Date(fechaISO);
-  return d.toLocaleDateString('es-PE', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  // IMPORTANTE: carpeta_fecha es una fecha "pura" (sin hora), guardada como
+  // AAAA-MM-DD. Si se arma con `new Date(fechaISO)` y se formatea con la hora
+  // local del navegador, en zonas horarias detras de UTC (como Peru, UTC-5)
+  // el dia se corre hacia atras (ej. 25/09 se ve como 24/09). Por eso aqui se
+  // leen directo los numeros del texto, sin pasar por conversion de huso horario.
+  const soloFecha = String(fechaISO).slice(0, 10); // "AAAA-MM-DD"
+  const [anio, mes, dia] = soloFecha.split('-');
+  return `${dia}/${mes}/${anio}`;
 }
 
 const ICONO_ESTABLO = `<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"/><circle cx="12" cy="12" r="2.6" fill="white" stroke="none"/></svg>`;

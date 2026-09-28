@@ -333,7 +333,7 @@ router.get('/:id/reporte.pdf', requireAuth, requireAdmin, async (req, res) => {
   );
 
   res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `attachment; filename="reporte_${inspeccion.folio}.pdf"`);
+  res.setHeader('Content-Disposition', `inline; filename="reporte_${inspeccion.folio}.pdf"`);
   const doc = new PDFDocument({ margin: 40, size: 'A4' });
   doc.pipe(res);
 
@@ -347,28 +347,53 @@ router.get('/:id/reporte.pdf', requireAuth, requireAdmin, async (req, res) => {
     .text(`Fecha y hora: ${new Date(inspeccion.fecha_hora).toLocaleString('es-PE')}`);
   doc.moveDown(0.8);
 
+  const ANCHO_UTIL = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+  let categoriaActual = null;
+
   for (const r of respuestasRes.rows) {
-    if (doc.y > 700) doc.addPage();
-    doc.fontSize(10).font('Helvetica-Bold').text(`${r.categoria || ''} — ${r.item_descripcion || ''}`);
-    doc.font('Helvetica').fontSize(9.5).fillColor(r.resultado === 'observado' ? '#b91c1c' : '#15803d')
+    // Salto de pagina si no cabe al menos el encabezado del item + un margen razonable
+    if (doc.y > 700) { doc.addPage(); categoriaActual = null; }
+
+    // Encabezado de seccion: solo se imprime una vez, no en cada actividad
+    if (r.categoria !== categoriaActual) {
+      categoriaActual = r.categoria;
+      doc.moveDown(0.3);
+      doc.rect(doc.x, doc.y, ANCHO_UTIL, 18).fill('#eef2f5');
+      doc.fillColor('#0f172a').fontSize(10).font('Helvetica-Bold')
+        .text(categoriaActual || '(sin sección)', doc.x + 6, doc.y - 15);
+      doc.fillColor('black');
+      doc.moveDown(0.6);
+    }
+
+    doc.fontSize(9.5).font('Helvetica-Bold').text(r.item_descripcion || '');
+    doc.font('Helvetica').fontSize(9).fillColor(r.resultado === 'observado' ? '#b91c1c' : '#15803d')
       .text(`Resultado: ${r.resultado === 'observado' ? 'Observado' : 'Correcto'}`);
     doc.fillColor('black');
     if (r.observacion_texto) {
-      doc.fontSize(9.5).text(`Observación: ${r.observacion_texto}`);
+      doc.fontSize(9).text(`Observación: ${r.observacion_texto}`);
     }
     if (r.observacion_foto_url) {
       try {
         const imgRes = await fetch(r.observacion_foto_url);
         const arrayBuffer = await imgRes.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
-        if (doc.y > 550) doc.addPage();
-        doc.image(buffer, { width: 180 });
+        const ANCHO_IMG = 150;
+        const ALTO_IMG = 110;
+        if (doc.y + ALTO_IMG > 760) { doc.addPage(); categoriaActual = null; }
+        const imgX = doc.x;
+        const imgY = doc.y + 4;
+        doc.image(buffer, imgX, imgY, { fit: [ANCHO_IMG, ALTO_IMG] });
+        // Se fija la posicion manualmente despues de la imagen: pdfkit no siempre
+        // corre el cursor lo suficiente, lo que causaba que el texto siguiente
+        // se superpusiera visualmente con la foto.
+        doc.y = imgY + ALTO_IMG + 10;
+        doc.x = doc.page.margins.left;
       } catch (err) {
         doc.fontSize(8).fillColor('gray').text('(no se pudo cargar la fotografía)');
         doc.fillColor('black');
       }
     }
-    doc.moveDown(0.6);
+    doc.moveDown(0.7);
   }
 
   doc.end();

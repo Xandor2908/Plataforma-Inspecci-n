@@ -89,3 +89,25 @@ document.getElementById('btn-marcar-pendiente').addEventListener('click', async 
   document.getElementById('modal-detalle').style.display = 'none';
   await cargarIncidencias();
 });
+
+document.getElementById('btn-eliminar-incidencia').addEventListener('click', () => {
+  document.getElementById('clave-eliminar-incidencia').value = '';
+  document.getElementById('eliminar-incidencia-error').textContent = '';
+  document.getElementById('modal-eliminar-incidencia').style.display = 'flex';
+});
+
+document.getElementById('btn-confirmar-eliminar-incidencia').addEventListener('click', async () => {
+  const clave = document.getElementById('clave-eliminar-incidencia').value;
+  const errorEl = document.getElementById('eliminar-incidencia-error');
+  if (!clave) { errorEl.textContent = 'Ingresa la clave de confirmación'; return; }
+  const res = await apiFetch(`/api/incidencias/${incidenciaActualId}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ clave }),
+  });
+  const data = await res.json();
+  if (!res.ok) { errorEl.textContent = data.error || 'No se pudo eliminar'; return; }
+  document.getElementById('modal-eliminar-incidencia').style.display = 'none';
+  document.getElementById('modal-detalle').style.display = 'none';
+  await cargarIncidencias();
+});

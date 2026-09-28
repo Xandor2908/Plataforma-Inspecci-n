@@ -328,6 +328,27 @@ textarea { resize: vertical; min-height: 70px; }
   .cf-main { padding: 14px; }
 }
 
+/* ============ Calendario en dos columnas (para caber en una pantalla) ============ */
+.cal-shell { display: flex; gap: 16px; align-items: flex-start; }
+.cal-sidebar { width: 300px; flex-shrink: 0; }
+.cal-main { flex: 1; min-width: 0; display: flex; }
+.cal-main .card { width: 100%; }
+.cal-tabla-scroll { flex: 1; overflow-y: auto; min-height: 200px; max-height: calc(100vh - 260px); }
+.cal-stats-compact { display: flex; gap: 8px; margin-bottom: 12px; }
+.cal-stat { flex: 1; background: #fff; border: 1px solid var(--line); border-radius: var(--r-sm); padding: 10px 8px; text-align: center; }
+.cal-stat .num { font-size: 18px; font-weight: 800; color: var(--navy); }
+.cal-stat .label { font-size: 10px; color: var(--ink-3); text-transform: uppercase; font-weight: 700; }
+.calendario-mes .dia { cursor: default; }
+.calendario-mes .dia.con-datos { cursor: pointer; font-weight: 700; }
+.calendario-mes .dia.con-datos:hover { outline: 2px solid var(--blue); outline-offset: -2px; }
+.calendario-mes .dia.hoy { border: 2px solid var(--navy); }
+
+@media (max-width: 960px) {
+  .cal-shell { flex-direction: column; }
+  .cal-sidebar { width: 100%; }
+  .cal-tabla-scroll { max-height: 340px; }
+}
+
 /* ============ Shell con sidebar (plataforma maestra) ============ */
 .app-shell { display: flex; min-height: 100vh; }
 

@@ -18,6 +18,13 @@
     verCalendario();
   });
   document.getElementById('btn-confirmar-eliminar').addEventListener('click', confirmarEliminar);
+  document.getElementById('btn-hoy').addEventListener('click', () => {
+    const ahora = new Date();
+    document.getElementById('sel-anio').value = ahora.getFullYear();
+    document.getElementById('sel-mes').value = String(ahora.getMonth() + 1);
+    document.getElementById('filtro-fecha').value = '';
+    verCalendario();
+  });
   await verCalendario();
 })();
 
@@ -74,6 +81,8 @@ async function verCalendario() {
 
   const diasEnMes = new Date(anio, mes, 0).getDate();
   const primerDiaSemana = new Date(anio, mes - 1, 1).getDay();
+  const hoyReal = new Date();
+  const esMesActual = hoyReal.getFullYear() === Number(anio) && (hoyReal.getMonth() + 1) === Number(mes);
 
   const cont = document.getElementById('calendario');
   cont.innerHTML = '';
@@ -82,6 +91,7 @@ async function verCalendario() {
     const div = document.createElement('div');
     div.className = 'dia';
     div.textContent = d;
+    if (esMesActual && hoyReal.getDate() === d) div.classList.add('hoy');
     const inspsDelDia = porDia[d];
     if (inspsDelDia && inspsDelDia.length > 0) {
       const tienePre = inspsDelDia.some((i) => i.tipo_checklist === 'preoperacional');
@@ -89,7 +99,13 @@ async function verCalendario() {
       if (tienePre && tieneMant) div.classList.add('doble');
       else if (tienePre) div.classList.add('pre');
       else div.classList.add('mant');
-      div.title = inspsDelDia.map((i) => `${i.checklist_nombre} (folio ${i.folio})`).join('\n');
+      div.title = inspsDelDia.map((i) => `${i.checklist_nombre} (folio ${i.folio})`).join('\n') + '\n\n(Clic para filtrar la tabla a este día)';
+      div.classList.add('con-datos');
+      const fechaDia = `${anio}-${String(mes).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      div.addEventListener('click', () => {
+        document.getElementById('filtro-fecha').value = fechaDia;
+        verCalendario();
+      });
     }
     cont.appendChild(div);
   }
@@ -108,6 +124,7 @@ async function verCalendario() {
       <td>${insp.total_observados}</td>
       <td style="white-space:nowrap">
         <a class="btn small secundario" href="/api/inspecciones/${insp.id}/reporte.pdf" target="_blank">Ver reporte</a>
+        <button class="btn small secundario" data-action="imprimir-reporte" data-id="${insp.id}">Imprimir reporte</button>
         <button class="btn small rojo" data-id="${insp.id}" data-action="eliminar">Eliminar</button>
       </td>
     `;
@@ -121,6 +138,27 @@ async function verCalendario() {
       document.getElementById('modal-eliminar').style.display = 'flex';
     })
   );
+  tbody.querySelectorAll('[data-action="imprimir-reporte"]').forEach((btn) =>
+    btn.addEventListener('click', () => imprimirReporte(btn.dataset.id))
+  );
+}
+
+function imprimirReporte(inspeccionId) {
+  // Carga el PDF en un iframe oculto y dispara la impresion del navegador
+  // apenas termina de cargar, sin necesidad de abrir/descargar el archivo.
+  const iframe = document.createElement('iframe');
+  iframe.style.display = 'none';
+  iframe.src = `/api/inspecciones/${inspeccionId}/reporte.pdf`;
+  document.body.appendChild(iframe);
+  iframe.onload = () => {
+    try {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    } catch (e) {
+      window.open(`/api/inspecciones/${inspeccionId}/reporte.pdf`, '_blank');
+    }
+    setTimeout(() => document.body.removeChild(iframe), 60000);
+  };
 }
 
 async function confirmarEliminar() {

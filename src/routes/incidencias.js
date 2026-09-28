@@ -62,4 +62,17 @@ router.patch('/:id/pendiente', requireAuth, requireAdmin, async (req, res) => {
   res.json(result.rows[0]);
 });
 
+// Elimina una incidencia puntual (no la inspeccion completa). Requiere la misma
+// clave adicional de seguridad que eliminar una inspeccion.
+router.delete('/:id', requireAuth, requireAdmin, async (req, res) => {
+  const { clave } = req.body || {};
+  const claveCorrecta = process.env.CLAVE_ELIMINAR || 'M@3STR0';
+  if (clave !== claveCorrecta) {
+    return res.status(403).json({ error: 'Clave incorrecta' });
+  }
+  const result = await pool.query('DELETE FROM incidencias WHERE id = $1 RETURNING id', [req.params.id]);
+  if (!result.rows[0]) return res.status(404).json({ error: 'Incidencia no encontrada' });
+  res.json({ ok: true });
+});
+
 module.exports = router;
