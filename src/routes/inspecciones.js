@@ -57,6 +57,12 @@ router.post('/', requireAuth, upload.any(), async (req, res) => {
 
     const hoy = new Date();
     const carpetaFecha = hoy.toISOString().slice(0, 10); // AAAA-MM-DD
+
+    // Bloqueo por fecha: si dos envios llegan casi al mismo tiempo el mismo dia,
+    // este bloqueo obliga a que se procesen uno despues del otro, evitando que
+    // ambos calculen el mismo numero de folio (23505 duplicate key).
+    await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [carpetaFecha]);
+
     const countRes = await client.query(
       `SELECT COUNT(*)::int AS n FROM inspecciones WHERE carpeta_fecha = $1`,
       [carpetaFecha]

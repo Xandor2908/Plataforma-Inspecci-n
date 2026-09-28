@@ -161,6 +161,10 @@ function limpiarFormulario() {
 document.getElementById('extra-texto').addEventListener('input', guardarBorrador);
 
 document.getElementById('btn-enviar').addEventListener('click', async () => {
+  const btnEnviar = document.getElementById('btn-enviar');
+  if (btnEnviar.disabled) return; // ya se esta procesando un envio, ignora clics/toques repetidos
+  btnEnviar.disabled = true;
+
   const errorEl = document.getElementById('envio-error');
   const okEl = document.getElementById('envio-ok');
   errorEl.textContent = '';
@@ -169,6 +173,7 @@ document.getElementById('btn-enviar').addEventListener('click', async () => {
   const faltantes = checklistDetalle.items.filter((item) => !respuestas[item.id] || !respuestas[item.id].resultado);
   if (faltantes.length > 0) {
     errorEl.textContent = `Faltan ${faltantes.length} ítem(s) por calificar`;
+    btnEnviar.disabled = false;
     return;
   }
   const sinDescripcion = checklistDetalle.items.filter(
@@ -176,6 +181,7 @@ document.getElementById('btn-enviar').addEventListener('click', async () => {
   );
   if (sinDescripcion.length > 0) {
     errorEl.textContent = 'Toda observación debe incluir una descripción';
+    btnEnviar.disabled = false;
     return;
   }
 
