@@ -184,6 +184,18 @@ textarea { resize: vertical; min-height: 70px; }
 .equipo-toggle:hover { border-color: var(--blue); }
 .equipo-toggle.activo { background: var(--blue); border-color: var(--blue); color: #fff; }
 
+/* Seguridad general: cualquier ventana modal (overlay position:fixed + inset:0) de la
+   plataforma nunca debe desbordar la pantalla -especialmente en moviles-. Si su contenido
+   es mas alto que la pantalla, se activa scroll DENTRO de la tarjeta, no de la pagina. */
+div[style*="position:fixed"][style*="inset:0"] {
+  padding: 16px;
+  box-sizing: border-box;
+}
+div[style*="position:fixed"][style*="inset:0"] > .card {
+  max-height: 88vh;
+  overflow-y: auto;
+}
+
 /* Imagen del checklist en la tarjeta de seleccion (operador) */
 .cc-imagen { width: 100%; height: 90px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; }
 .cc-imagen-vacia { display: flex; align-items: center; justify-content: center; background: #eef2f5; font-size: 28px; color: var(--ink-3); }
