@@ -1,7 +1,8 @@
 const express = require('express');
 const multer = require('multer');
+const PDFDocument = require('pdfkit');
 const pool = require('../db/pool');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireAdmin } = require('../middleware/auth');
 const { subirImagen } = require('../cloudinary');
 const { enviarAlertaTelegram, textoAlertaIncidencia } = require('../telegram');
 const { limpiarTexto } = require('../utils');
@@ -130,6 +131,40 @@ router.post('/', requireAuth, upload.any(), async (req, res) => {
       }
     }
 
+    // Observación adicional no prevista en los pasos del checklist (opcional).
+    // Se guarda como una respuesta más, sin checklist_item_id (no corresponde a ningún paso).
+    const textoExtra = limpiarTexto(payload.observacion_extra_texto);
+    if (textoExtra) {
+      const archivoExtra = (req.files || []).find((f) => f.fieldname === 'foto_extra');
+      let fotoExtraUrl = null;
+      if (archivoExtra) fotoExtraUrl = await subirImagen(archivoExtra.buffer, 'establo/observaciones');
+
+      const respExtraRes = await client.query(
+        `INSERT INTO inspeccion_respuestas
+           (inspeccion_id, checklist_item_id, resultado, observacion_texto, observacion_foto_url,
+            categoria_snapshot, descripcion_snapshot, orden_snapshot)
+         VALUES ($1, NULL, 'observado', $2, $3, 'Observación adicional', '(no prevista en los pasos del checklist)', 99999)
+         RETURNING id`,
+        [inspeccion.id, textoExtra, fotoExtraUrl]
+      );
+
+      const codeCountRes = await client.query(
+        `SELECT COUNT(*)::int AS n FROM incidencias WHERE created_at::date = CURRENT_DATE`
+      );
+      const codigo = `INC-${carpetaFecha}-${String(codeCountRes.rows[0].n + 1).padStart(3, '0')}`;
+      const incRes = await client.query(
+        `INSERT INTO incidencias (codigo, inspeccion_respuesta_id, inspeccion_id, descripcion, foto_url)
+         VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+        [codigo, respExtraRes.rows[0].id, inspeccion.id, textoExtra, fotoExtraUrl]
+      );
+      incidenciasCreadas.push(incRes.rows[0]);
+
+      await client.query(
+        `UPDATE inspecciones SET total_observados = total_observados + 1 WHERE id = $1`,
+        [inspeccion.id]
+      );
+    }
+
     await client.query('COMMIT');
 
     // Alertas a Telegram (fuera de la transacción, no debe bloquear el guardado)
@@ -166,26 +201,51 @@ router.post('/', requireAuth, upload.any(), async (req, res) => {
   }
 });
 
+// Fecha de la inspeccion mas reciente para un conjunto de equipos (accesible para
+// operadores, no solo admin) — usado como dato informativo en la pantalla de checklist.
+router.get('/ultima', requireAuth, async (req, res) => {
+  const equipoIds = String(req.query.equipo_ids || '')
+    .split(',')
+    .map((v) => parseInt(v, 10))
+    .filter((v) => !isNaN(v));
+  if (equipoIds.length === 0) return res.json({ fecha: null });
+
+  const result = await pool.query(
+    `SELECT MAX(i.carpeta_fecha) AS fecha
+     FROM inspecciones i JOIN inspeccion_equipos ie ON ie.inspeccion_id = i.id
+     WHERE ie.equipo_id = ANY($1::int[])`,
+    [equipoIds]
+  );
+  res.json({ fecha: result.rows[0]?.fecha || null });
+});
+
 // Calendario de inspecciones de un equipo: dias con inspeccion registrada,
 // diferenciando pre-operacional/mantenimiento/otros por color (segun checklist_tipo).
 router.get('/calendario/:equipo_id', requireAuth, async (req, res) => {
   const { equipo_id } = req.params;
-  const { anio, mes } = req.query; // mes 1-12, opcional: si no se manda, trae todo
+  const { anio, mes, fecha, checklist_tipo_id, operador_id } = req.query;
 
   let query = `
-    SELECT i.id, i.folio, i.carpeta_fecha, i.total_observados, ct.codigo AS checklist_codigo,
-           ct.codigo_corto, ct.nombre AS checklist_nombre, ct.tipo_checklist
+    SELECT i.id, i.folio, i.carpeta_fecha, i.fecha_hora, i.total_observados, ct.codigo AS checklist_codigo,
+           ct.codigo_corto, ct.nombre AS checklist_nombre, ct.tipo_checklist,
+           u.nombre AS operador_nombre, u.id AS operador_id
     FROM inspecciones i
     JOIN inspeccion_equipos ie ON ie.inspeccion_id = i.id
     JOIN checklist_tipos ct ON ct.id = i.checklist_tipo_id
+    JOIN usuarios u ON u.id = i.operador_id
     WHERE ie.equipo_id = $1
   `;
   const params = [equipo_id];
+  let i = 2;
   if (anio && mes) {
-    query += ` AND EXTRACT(YEAR FROM i.carpeta_fecha) = $2 AND EXTRACT(MONTH FROM i.carpeta_fecha) = $3`;
+    query += ` AND EXTRACT(YEAR FROM i.carpeta_fecha) = $${i} AND EXTRACT(MONTH FROM i.carpeta_fecha) = $${i + 1}`;
     params.push(anio, mes);
+    i += 2;
   }
-  query += ' ORDER BY i.carpeta_fecha';
+  if (fecha) { query += ` AND i.carpeta_fecha = $${i++}`; params.push(fecha); }
+  if (checklist_tipo_id) { query += ` AND i.checklist_tipo_id = $${i++}`; params.push(checklist_tipo_id); }
+  if (operador_id) { query += ` AND i.operador_id = $${i++}`; params.push(operador_id); }
+  query += ' ORDER BY i.fecha_hora';
 
   const result = await pool.query(query, params);
 
@@ -232,6 +292,107 @@ router.get('/:id', requireAuth, async (req, res) => {
   );
 
   res.json({ ...inspeccion, equipos: equiposRes.rows, respuestas: respuestasRes.rows });
+});
+
+// Reporte de una inspeccion en PDF: items, resultado, observaciones (texto + foto),
+// datos del responsable y fecha. Listo para descargar/imprimir.
+router.get('/:id/reporte.pdf', requireAuth, requireAdmin, async (req, res) => {
+  const inspRes = await pool.query(
+    `SELECT i.*, ct.nombre AS checklist_nombre, u.nombre AS operador_nombre
+     FROM inspecciones i
+     JOIN checklist_tipos ct ON ct.id = i.checklist_tipo_id
+     JOIN usuarios u ON u.id = i.operador_id
+     WHERE i.id = $1`,
+    [req.params.id]
+  );
+  const inspeccion = inspRes.rows[0];
+  if (!inspeccion) return res.status(404).json({ error: 'Inspección no encontrada' });
+
+  const equiposRes = await pool.query(
+    `SELECT e.nomenclatura FROM equipos e
+     JOIN inspeccion_equipos ie ON ie.equipo_id = e.id WHERE ie.inspeccion_id = $1`,
+    [req.params.id]
+  );
+  const respuestasRes = await pool.query(
+    `SELECT r.*,
+            COALESCE(ci.categoria, r.categoria_snapshot) AS categoria,
+            COALESCE(ci.descripcion, r.descripcion_snapshot) AS item_descripcion,
+            COALESCE(ci.orden, r.orden_snapshot, 0) AS orden
+     FROM inspeccion_respuestas r LEFT JOIN checklist_items ci ON ci.id = r.checklist_item_id
+     WHERE r.inspeccion_id = $1 ORDER BY orden`,
+    [req.params.id]
+  );
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename="reporte_${inspeccion.folio}.pdf"`);
+  const doc = new PDFDocument({ margin: 40, size: 'A4' });
+  doc.pipe(res);
+
+  doc.fontSize(16).font('Helvetica-Bold').text('ESTABLO - Reporte de inspección');
+  doc.moveDown(0.3);
+  doc.fontSize(10).font('Helvetica')
+    .text(`Folio: ${inspeccion.folio}`)
+    .text(`Checklist: ${inspeccion.checklist_nombre}`)
+    .text(`Equipos: ${equiposRes.rows.map((e) => e.nomenclatura).join(', ')}`)
+    .text(`Responsable: ${inspeccion.operador_nombre}`)
+    .text(`Fecha y hora: ${new Date(inspeccion.fecha_hora).toLocaleString('es-PE')}`);
+  doc.moveDown(0.8);
+
+  for (const r of respuestasRes.rows) {
+    if (doc.y > 700) doc.addPage();
+    doc.fontSize(10).font('Helvetica-Bold').text(`${r.categoria || ''} — ${r.item_descripcion || ''}`);
+    doc.font('Helvetica').fontSize(9.5).fillColor(r.resultado === 'observado' ? '#b91c1c' : '#15803d')
+      .text(`Resultado: ${r.resultado === 'observado' ? 'Observado' : 'Correcto'}`);
+    doc.fillColor('black');
+    if (r.observacion_texto) {
+      doc.fontSize(9.5).text(`Observación: ${r.observacion_texto}`);
+    }
+    if (r.observacion_foto_url) {
+      try {
+        const imgRes = await fetch(r.observacion_foto_url);
+        const arrayBuffer = await imgRes.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        if (doc.y > 550) doc.addPage();
+        doc.image(buffer, { width: 180 });
+      } catch (err) {
+        doc.fontSize(8).fillColor('gray').text('(no se pudo cargar la fotografía)');
+        doc.fillColor('black');
+      }
+    }
+    doc.moveDown(0.6);
+  }
+
+  doc.end();
+});
+
+// Elimina un registro de inspeccion completo (y sus incidencias/respuestas asociadas).
+// Requiere una clave adicional de seguridad, ademas de la sesion de administrador.
+router.delete('/:id', requireAuth, requireAdmin, async (req, res) => {
+  const { clave } = req.body || {};
+  const claveCorrecta = process.env.CLAVE_ELIMINAR || 'M@3STR0';
+  if (clave !== claveCorrecta) {
+    return res.status(403).json({ error: 'Clave incorrecta' });
+  }
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query('DELETE FROM incidencias WHERE inspeccion_id = $1', [req.params.id]);
+    await client.query('DELETE FROM inspeccion_respuestas WHERE inspeccion_id = $1', [req.params.id]);
+    await client.query('DELETE FROM inspeccion_equipos WHERE inspeccion_id = $1', [req.params.id]);
+    const delRes = await client.query('DELETE FROM inspecciones WHERE id = $1 RETURNING id', [req.params.id]);
+    if (!delRes.rows[0]) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Inspección no encontrada' });
+    }
+    await client.query('COMMIT');
+    res.json({ ok: true });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error(err);
+    res.status(500).json({ error: 'Error del servidor', detalle: err.message });
+  } finally {
+    client.release();
+  }
 });
 
 module.exports = router;

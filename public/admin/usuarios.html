@@ -28,6 +28,24 @@
 
   <div class="card">
     <h2>Usuarios registrados</h2>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:14px">
+      <div>
+        <label>Rol</label>
+        <select id="filtro-rol"><option value="">Todos</option><option value="admin">Admin</option><option value="operador">No admin</option></select>
+      </div>
+      <div>
+        <label>Estado</label>
+        <select id="filtro-estado-usuario"><option value="">Todos</option><option value="activo">Activo</option><option value="inactivo">Inactivo</option></select>
+      </div>
+      <div style="flex:1; min-width:200px">
+        <label>Buscar usuario</label>
+        <div style="display:flex; gap:8px">
+          <input id="buscar-usuario" placeholder="Nombre de usuario...">
+          <button class="btn small" id="btn-buscar-usuario" style="margin-top:0">Buscar</button>
+        </div>
+      </div>
+    </div>
+    <div class="error-msg" id="busqueda-error"></div>
     <table class="tabla">
       <thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Estado</th><th></th></tr></thead>
       <tbody id="tabla-usuarios"></tbody>

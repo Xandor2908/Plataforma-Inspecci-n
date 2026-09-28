@@ -15,14 +15,55 @@
   </div>
 </header>
 
-<div class="container">
-  <div class="card">
-    <div id="equipos-resumen" style="font-size:13px;color:#6b7d8a;margin-bottom:10px"></div>
+<div class="cf-shell">
+
+  <aside class="cf-sidebar">
+    <div class="cf-imagen" id="cf-imagen">📋</div>
+    <div class="cf-info-item"><label>Equipos</label><div id="cf-equipos">-</div></div>
+    <div class="cf-info-item"><label>Tipo de checklist</label><div id="cf-tipo-pill">-</div></div>
+    <div class="cf-info-item"><label>Última inspección de estos equipos</label><div id="cf-ultimo">-</div></div>
+    <div class="cf-tip" id="cf-tip">💡 Revisa cada punto con calma antes de marcar "Correcto".</div>
+    <div class="cf-banner-starlink" id="cf-banner-starlink" style="display:none">
+      📡 Con Starlink, el equipo mantiene comunicación activa en el campo.
+    </div>
+  </aside>
+
+  <main class="cf-main">
+    <div class="cf-header-main">
+      <div style="flex:1; min-width:200px">
+        <h2 id="cf-nombre-checklist" style="margin:0 0 4px">Checklist</h2>
+        <p style="font-size:12.5px;color:var(--ink-3);margin:0">Verifique los siguientes ítems para asegurar el correcto funcionamiento del equipo.</p>
+      </div>
+      <div class="cf-fecha-box">
+        <label>📅 Fecha del checklist</label>
+        <div id="cf-fecha-hoy">-</div>
+      </div>
+      <div class="cf-progreso-box">
+        <label>Progreso</label>
+        <div id="cf-progreso-texto">0 / 0</div>
+        <div class="cf-progreso-bar"><div class="cf-progreso-fill" id="cf-progreso-fill"></div></div>
+      </div>
+    </div>
+
     <div id="items-container"></div>
+
+    <div class="cf-extra">
+      <h3 style="margin:0 0 4px">¿Encontraste algo que no estaba en los pasos anteriores?</h3>
+      <p style="font-size:12.5px;color:var(--ink-3);margin:0 0 8px">Registra aquí cualquier observación adicional no prevista en el checklist (opcional).</p>
+      <textarea id="extra-texto" placeholder="Describe la observación adicional..."></textarea>
+      <label style="margin-top:8px">Fotografía (opcional)</label>
+      <input type="file" id="extra-foto" accept="image/*" capture="environment">
+    </div>
+
     <div class="error-msg" id="envio-error"></div>
     <div class="ok-msg" id="envio-ok"></div>
-    <button class="btn" id="btn-enviar">Enviar checklist</button>
-  </div>
+    <div style="display:flex; gap:10px; margin-top:10px">
+      <button class="btn" id="btn-enviar">Enviar checklist</button>
+      <button class="btn secundario" id="btn-limpiar">Limpiar formulario</button>
+    </div>
+    <p style="font-size:11.5px;color:var(--ink-3);margin-top:10px">🔒 Tu progreso se guarda automáticamente en este dispositivo mientras completas el formulario.</p>
+  </main>
+
 </div>
 
 <script src="js/common.js"></script>

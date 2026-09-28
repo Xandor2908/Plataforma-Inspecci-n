@@ -1,4 +1,5 @@
 let usuarioEditandoId = null;
+let usuariosCache = [];
 
 (async function init() {
   await initShell('usuarios', 'Usuarios');
@@ -13,6 +14,13 @@ let usuarioEditandoId = null;
     document.getElementById('r-password').value = generarPasswordAleatoria();
   });
   document.getElementById('btn-confirmar-restablecer').addEventListener('click', confirmarRestablecer);
+
+  document.getElementById('filtro-rol').addEventListener('change', renderUsuariosFiltrados);
+  document.getElementById('filtro-estado-usuario').addEventListener('change', renderUsuariosFiltrados);
+  document.getElementById('btn-buscar-usuario').addEventListener('click', renderUsuariosFiltrados);
+  document.getElementById('buscar-usuario').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); renderUsuariosFiltrados(); }
+  });
 })();
 
 function generarPasswordAleatoria() {
@@ -24,7 +32,26 @@ function generarPasswordAleatoria() {
 
 async function cargarUsuarios() {
   const res = await apiFetch('/api/usuarios');
-  const usuarios = await res.json();
+  usuariosCache = await res.json();
+  renderUsuariosFiltrados();
+}
+
+function renderUsuariosFiltrados() {
+  const rol = document.getElementById('filtro-rol').value;
+  const estado = document.getElementById('filtro-estado-usuario').value;
+  const busqueda = document.getElementById('buscar-usuario').value.trim().toLowerCase();
+  const errorEl = document.getElementById('busqueda-error');
+  errorEl.textContent = '';
+
+  let usuarios = usuariosCache;
+  if (rol) usuarios = usuarios.filter((u) => u.rol === rol);
+  if (estado) usuarios = usuarios.filter((u) => (estado === 'activo' ? u.activo : !u.activo));
+  if (busqueda) usuarios = usuarios.filter((u) => u.usuario.toLowerCase().includes(busqueda));
+
+  if (busqueda && usuarios.length === 0) {
+    errorEl.textContent = 'Usuario no encontrado';
+  }
+
   const tbody = document.getElementById('tabla-usuarios');
   tbody.innerHTML = '';
   usuarios.forEach((u) => {
@@ -42,7 +69,7 @@ async function cargarUsuarios() {
     tbody.appendChild(tr);
   });
   tbody.querySelectorAll('[data-action="editar"]').forEach((btn) =>
-    btn.addEventListener('click', () => abrirEdicion(usuarios.find((u) => String(u.id) === btn.dataset.id)))
+    btn.addEventListener('click', () => abrirEdicion(usuariosCache.find((u) => String(u.id) === btn.dataset.id)))
   );
   tbody.querySelectorAll('[data-action="toggle"]').forEach((btn) =>
     btn.addEventListener('click', async () => {

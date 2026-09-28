@@ -164,6 +164,16 @@ textarea { resize: vertical; min-height: 70px; }
 .btn-agregar-paso { background: none; border: 1px dashed var(--line); color: var(--blue); border-radius: 6px; padding: 6px 10px; font-size: 13px; cursor: pointer; margin-top: 4px; }
 .btn-agregar-seccion { background: none; border: 1px dashed var(--line); color: var(--ink-2); border-radius: var(--r-sm); padding: 10px; font-size: 13.5px; cursor: pointer; width: 100%; text-align: center; }
 
+/* Botones de exportacion (Excel / PDF) */
+.btn-export {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--navy); color: #fff; border: none; border-radius: 8px;
+  padding: 9px 16px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none;
+}
+.btn-export:hover { background: #1e293b; }
+.btn-export.pdf { background: var(--red); }
+.btn-export.pdf:hover { background: #b91c1c; }
+
 /* Selector de equipos implicados (botones toggle) */
 .equipo-toggle-grid { display: flex; flex-wrap: wrap; gap: 8px; }
 .equipo-toggle {
@@ -173,6 +183,11 @@ textarea { resize: vertical; min-height: 70px; }
 }
 .equipo-toggle:hover { border-color: var(--blue); }
 .equipo-toggle.activo { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+/* Imagen del checklist en la tarjeta de seleccion (operador) */
+.cc-imagen { width: 100%; height: 90px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; }
+.cc-imagen-vacia { display: flex; align-items: center; justify-content: center; background: #eef2f5; font-size: 28px; color: var(--ink-3); }
+.cc-codigo-op { font-weight: 700; font-size: 14px; margin-bottom: 2px; }
 
 .grid-menu { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
 .grid-menu a { text-decoration: none; }
@@ -249,6 +264,68 @@ textarea { resize: vertical; min-height: 70px; }
 @media (max-width: 420px) {
   .grid-menu { grid-template-columns: 1fr; }
   .stat-box { min-width: 100%; }
+}
+
+/* ============ Pantalla de completar checklist (operador) ============ */
+.cf-shell { display: flex; gap: 0; align-items: flex-start; min-height: calc(100vh - 54px); }
+.cf-sidebar {
+  width: 240px; flex-shrink: 0; background: #fff; border-right: 1px solid var(--line);
+  padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; position: sticky; top: 0;
+}
+.cf-imagen {
+  width: 100%; height: 110px; border-radius: var(--r); background: var(--navy);
+  display: flex; align-items: center; justify-content: center; font-size: 40px; color: #fff; overflow: hidden;
+}
+.cf-imagen img { width: 100%; height: 100%; object-fit: cover; }
+.cf-info-item label { display: block; font-size: 11px; color: var(--ink-3); font-weight: 700; text-transform: uppercase; letter-spacing: .03em; margin-bottom: 3px; }
+.cf-info-item div:not(label) { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.cf-tip { background: var(--blue-soft); border: 1px solid var(--blue-line); border-radius: var(--r-sm); padding: 10px 12px; font-size: 12px; color: #1e3a5f; }
+.cf-banner-starlink { background: var(--green-soft); border: 1px solid var(--green-line); border-radius: var(--r-sm); padding: 10px 12px; font-size: 12px; color: #14532d; }
+
+.cf-main { flex: 1; min-width: 0; padding: 22px; }
+.cf-header-main { display: flex; gap: 14px; flex-wrap: wrap; align-items: stretch; margin-bottom: 18px; }
+.cf-fecha-box, .cf-progreso-box {
+  background: #fff; border: 1px solid var(--line); border-radius: var(--r-sm); padding: 10px 16px; min-width: 140px;
+}
+.cf-fecha-box label, .cf-progreso-box label { display: block; font-size: 11px; color: var(--ink-3); font-weight: 700; margin-bottom: 4px; }
+.cf-fecha-box div { font-size: 14px; font-weight: 700; }
+.cf-progreso-box #cf-progreso-texto { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.cf-progreso-bar { width: 130px; height: 6px; background: #e5e7eb; border-radius: 999px; overflow: hidden; }
+.cf-progreso-fill { height: 100%; background: var(--green); width: 0%; transition: width .2s ease; }
+
+.cf-item-row {
+  display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line-2);
+}
+.cf-item-row .cf-num { font-size: 12px; color: var(--ink-3); width: 22px; padding-top: 6px; flex-shrink: 0; }
+.cf-item-row .cf-item-texto { flex: 1; min-width: 160px; }
+.cf-item-row .cf-item-categoria { font-size: 10.5px; color: var(--ink-3); text-transform: uppercase; font-weight: 700; letter-spacing: .02em; }
+.cf-item-row .cf-item-desc { font-size: 13.5px; color: var(--ink); margin-top: 1px; }
+.cf-item-row .cf-opciones { display: flex; gap: 6px; flex-shrink: 0; }
+.cf-item-row .cf-opciones button {
+  border: 1px solid var(--line); background: #fff; border-radius: 999px; width: 34px; height: 34px;
+  cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center;
+}
+.cf-item-row .cf-opciones button.correcto.activo { background: var(--green); border-color: var(--green); color: #fff; }
+.cf-item-row .cf-opciones button.observado.activo { background: var(--red); border-color: var(--red); color: #fff; }
+.cf-item-row .cf-observacion { width: 100%; margin-top: 8px; display: none; }
+.cf-item-row.observado .cf-observacion { display: flex; gap: 8px; align-items: center; }
+.cf-item-row .cf-observacion input[type=text] { flex: 1; }
+.cf-item-row .cf-observacion label.cf-foto-btn {
+  border: 1px solid var(--line); border-radius: 8px; width: 36px; height: 36px; display: flex;
+  align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; font-size: 15px;
+}
+.cf-item-row .cf-observacion input[type=file] { display: none; }
+
+.cf-extra {
+  background: #fff; border: 1px solid var(--line); border-radius: var(--r); padding: 16px; margin-top: 16px;
+}
+.cf-extra textarea { width: 100%; }
+
+@media (max-width: 860px) {
+  .cf-shell { flex-direction: column; }
+  .cf-sidebar { width: 100%; position: static; flex-direction: row; flex-wrap: wrap; align-items: center; }
+  .cf-imagen { width: 70px; height: 70px; font-size: 24px; }
+  .cf-main { padding: 14px; }
 }
 
 /* ============ Shell con sidebar (plataforma maestra) ============ */

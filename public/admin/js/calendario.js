@@ -6,7 +6,18 @@
   document.getElementById('sel-mes').value = String(hoy.getMonth() + 1);
 
   await cargarEquipos();
+  await cargarFiltrosChecklistYResponsable();
   document.getElementById('btn-ver').addEventListener('click', verCalendario);
+  document.getElementById('filtro-fecha').addEventListener('change', verCalendario);
+  document.getElementById('filtro-checklist').addEventListener('change', verCalendario);
+  document.getElementById('filtro-responsable').addEventListener('change', verCalendario);
+  document.getElementById('btn-limpiar-filtros').addEventListener('click', () => {
+    document.getElementById('filtro-fecha').value = '';
+    document.getElementById('filtro-checklist').value = '';
+    document.getElementById('filtro-responsable').value = '';
+    verCalendario();
+  });
+  document.getElementById('btn-confirmar-eliminar').addEventListener('click', confirmarEliminar);
   await verCalendario();
 })();
 
@@ -17,20 +28,43 @@ async function cargarEquipos() {
   sel.innerHTML = equipos.map((e) => `<option value="${e.id}">${e.nomenclatura} (${e.tipo_nombre})</option>`).join('');
 }
 
+async function cargarFiltrosChecklistYResponsable() {
+  const [checklistsRes, usuariosRes] = await Promise.all([
+    apiFetch('/api/checklists'),
+    apiFetch('/api/usuarios'),
+  ]);
+  const checklists = await checklistsRes.json();
+  const usuarios = await usuariosRes.json();
+  document.getElementById('filtro-checklist').innerHTML =
+    '<option value="">Todos</option>' + checklists.map((c) => `<option value="${c.id}">${c.codigo_corto} - ${c.nombre}</option>`).join('');
+  document.getElementById('filtro-responsable').innerHTML =
+    '<option value="">Todos</option>' + usuarios.map((u) => `<option value="${u.id}">${u.nombre}</option>`).join('');
+}
+
+let inspeccionAEliminar = null;
+
 async function verCalendario() {
   const equipoId = document.getElementById('sel-equipo').value;
   if (!equipoId) return;
   const anio = document.getElementById('sel-anio').value;
   const mes = document.getElementById('sel-mes').value;
+  const fecha = document.getElementById('filtro-fecha').value;
+  const checklistId = document.getElementById('filtro-checklist').value;
+  const responsableId = document.getElementById('filtro-responsable').value;
 
-  const res = await apiFetch(`/api/inspecciones/calendario/${equipoId}?anio=${anio}&mes=${mes}`);
+  const params = new URLSearchParams({ anio, mes });
+  if (fecha) params.set('fecha', fecha);
+  if (checklistId) params.set('checklist_tipo_id', checklistId);
+  if (responsableId) params.set('operador_id', responsableId);
+
+  const res = await apiFetch(`/api/inspecciones/calendario/${equipoId}?${params.toString()}`);
   const data = await res.json();
 
   document.getElementById('stat-mes').textContent = data.inspecciones.length;
   document.getElementById('stat-total').textContent = data.total_inspecciones;
   document.getElementById('stat-observaciones').textContent = data.total_observaciones;
 
-  // Agrupar inspecciones por dia
+  // Agrupar inspecciones por dia (para el calendario visual, siempre segun el mes, sin los filtros de tabla)
   const porDia = {};
   data.inspecciones.forEach((insp) => {
     const dia = new Date(insp.carpeta_fecha).getUTCDate();
@@ -39,14 +73,11 @@ async function verCalendario() {
   });
 
   const diasEnMes = new Date(anio, mes, 0).getDate();
-  const primerDiaSemana = new Date(anio, mes - 1, 1).getDay(); // 0=domingo
+  const primerDiaSemana = new Date(anio, mes - 1, 1).getDay();
 
   const cont = document.getElementById('calendario');
   cont.innerHTML = '';
-  for (let i = 0; i < primerDiaSemana; i++) {
-    const vacio = document.createElement('div');
-    cont.appendChild(vacio);
-  }
+  for (let i = 0; i < primerDiaSemana; i++) cont.appendChild(document.createElement('div'));
   for (let d = 1; d <= diasEnMes; d++) {
     const div = document.createElement('div');
     div.className = 'dia';
@@ -66,13 +97,43 @@ async function verCalendario() {
   const tbody = document.getElementById('tabla-inspecciones');
   tbody.innerHTML = '';
   data.inspecciones.forEach((insp) => {
+    const hora = new Date(insp.fecha_hora).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${formatearFecha(insp.carpeta_fecha)}</td>
+      <td>${hora}</td>
       <td>${insp.folio}</td>
       <td>${insp.checklist_nombre}</td>
+      <td>${insp.operador_nombre}</td>
       <td>${insp.total_observados}</td>
+      <td style="white-space:nowrap">
+        <a class="btn small secundario" href="/api/inspecciones/${insp.id}/reporte.pdf" target="_blank">Ver reporte</a>
+        <button class="btn small rojo" data-id="${insp.id}" data-action="eliminar">Eliminar</button>
+      </td>
     `;
     tbody.appendChild(tr);
   });
+  tbody.querySelectorAll('[data-action="eliminar"]').forEach((btn) =>
+    btn.addEventListener('click', () => {
+      inspeccionAEliminar = btn.dataset.id;
+      document.getElementById('clave-eliminar').value = '';
+      document.getElementById('eliminar-error').textContent = '';
+      document.getElementById('modal-eliminar').style.display = 'flex';
+    })
+  );
+}
+
+async function confirmarEliminar() {
+  const clave = document.getElementById('clave-eliminar').value;
+  const errorEl = document.getElementById('eliminar-error');
+  if (!clave) { errorEl.textContent = 'Ingresa la clave de confirmación'; return; }
+  const res = await apiFetch(`/api/inspecciones/${inspeccionAEliminar}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ clave }),
+  });
+  const data = await res.json();
+  if (!res.ok) { errorEl.textContent = data.error || 'No se pudo eliminar'; return; }
+  document.getElementById('modal-eliminar').style.display = 'none';
+  await verCalendario();
 }

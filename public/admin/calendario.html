@@ -43,12 +43,30 @@
 
   <div class="card">
     <h2>Detalle de inspecciones del mes</h2>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:14px">
+      <div><label>Fecha exacta</label><input id="filtro-fecha" type="date"></div>
+      <div><label>Checklist</label><select id="filtro-checklist"><option value="">Todos</option></select></div>
+      <div><label>Responsable</label><select id="filtro-responsable"><option value="">Todos</option></select></div>
+      <button class="btn small secundario" id="btn-limpiar-filtros" style="margin-top:0">Limpiar filtros</button>
+    </div>
     <table class="tabla">
-      <thead><tr><th>Fecha</th><th>Folio</th><th>Checklist</th><th>Observaciones</th></tr></thead>
+      <thead><tr><th>Fecha</th><th>Hora</th><th>Folio</th><th>Checklist</th><th>Responsable</th><th>Observaciones</th><th></th></tr></thead>
       <tbody id="tabla-inspecciones"></tbody>
     </table>
   </div>
 
+</div>
+
+<div id="modal-eliminar" style="display:none; position:fixed; inset:0; background:#0008; align-items:center; justify-content:center;">
+  <div class="card" style="max-width:380px; width:90%">
+    <h3>Eliminar registro de inspección</h3>
+    <p style="font-size:13px;color:var(--ink-2)">Esta acción no se puede deshacer. Se eliminará la inspección, sus respuestas y cualquier incidencia asociada.</p>
+    <label>Clave de confirmación</label>
+    <input id="clave-eliminar" type="password">
+    <div class="error-msg" id="eliminar-error"></div>
+    <button class="btn rojo" id="btn-confirmar-eliminar">Eliminar definitivamente</button>
+    <button class="btn secundario" onclick="document.getElementById('modal-eliminar').style.display='none'">Cancelar</button>
+  </div>
 </div>
 <script src="../js/common.js"></script>
 <script src="js/calendario.js"></script>

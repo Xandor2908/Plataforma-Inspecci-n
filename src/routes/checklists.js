@@ -1,15 +1,18 @@
 const express = require('express');
+const multer = require('multer');
 const pool = require('../db/pool');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 const { limpiarTexto } = require('../utils');
+const { subirImagen } = require('../cloudinary');
 
 const router = express.Router();
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 router.get('/', requireAuth, async (req, res) => {
   const soloActivos = req.usuario.rol !== 'admin';
   const result = await pool.query(
     `SELECT ct.id, ct.codigo, ct.codigo_corto, ct.nombre, ct.frecuencia, ct.tipo_checklist,
-            ct.equipos_requeridos, ct.activo, ct.orden,
+            ct.equipos_requeridos, ct.imagen_url, ct.activo, ct.orden,
             COUNT(DISTINCT ci.categoria)::int AS total_secciones,
             COUNT(ci.id)::int AS total_pasos
      FROM checklist_tipos ct
@@ -96,6 +99,24 @@ router.patch('/:id', requireAuth, requireAdmin, async (req, res) => {
   );
   if (!result.rows[0]) return res.status(404).json({ error: 'Checklist no encontrado' });
   res.json(result.rows[0]);
+});
+
+// Sube (o reemplaza) la imagen representativa de un checklist, mostrada en la
+// pantalla de seleccion de checklist del operador.
+router.post('/:id/imagen', requireAuth, requireAdmin, upload.single('imagen'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No se recibió ninguna imagen' });
+  try {
+    const url = await subirImagen(req.file.buffer, 'establo/checklists');
+    const result = await pool.query(
+      `UPDATE checklist_tipos SET imagen_url = $1 WHERE id = $2 RETURNING *`,
+      [url, req.params.id]
+    );
+    if (!result.rows[0]) return res.status(404).json({ error: 'Checklist no encontrado' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'No se pudo subir la imagen' });
+  }
 });
 
 router.put('/:id/items', requireAuth, requireAdmin, async (req, res) => {

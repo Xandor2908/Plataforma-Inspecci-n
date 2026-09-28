@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS checklist_tipos (
   frecuencia        TEXT NOT NULL DEFAULT 'Diaria',
   tipo_checklist    TEXT NOT NULL DEFAULT 'mantenimiento' CHECK (tipo_checklist IN ('preoperacional', 'mantenimiento')),
   equipos_requeridos JSONB NOT NULL,        -- lista fija de tipo_codigo requeridos, ej. ["BRR","SST"]
+  imagen_url        TEXT,                  -- foto representativa mostrada en la seleccion de checklist
   activo            BOOLEAN NOT NULL DEFAULT TRUE,
   orden             INTEGER NOT NULL DEFAULT 0,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -88,7 +89,7 @@ CREATE TABLE IF NOT EXISTS inspeccion_respuestas (
 CREATE TABLE IF NOT EXISTS incidencias (
   id                    SERIAL PRIMARY KEY,
   codigo                TEXT NOT NULL UNIQUE,   -- ej. INC-2026-0001
-  inspeccion_respuesta_id INTEGER NOT NULL REFERENCES inspeccion_respuestas(id),
+  inspeccion_respuesta_id INTEGER REFERENCES inspeccion_respuestas(id) ON DELETE SET NULL,
   inspeccion_id         INTEGER NOT NULL REFERENCES inspecciones(id),
   descripcion           TEXT NOT NULL,
   foto_url              TEXT,

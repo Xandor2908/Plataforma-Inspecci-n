@@ -17,6 +17,7 @@ let equiposSeleccionados = []; // array de tipo_codigo
     renderSecciones();
   });
   document.getElementById('btn-guardar-plantilla').addEventListener('click', guardarPlantilla);
+  document.getElementById('ed-imagen-input').addEventListener('change', subirImagenChecklist);
 })();
 
 async function cargarTiposEquipo() {
@@ -52,6 +53,7 @@ async function cargarChecklists() {
       <div class="cc-botones">
         <button class="btn small" data-action="editar" data-id="${c.id}">Editar</button>
         <button class="btn small secundario" data-action="duplicar" data-id="${c.id}">Duplicar</button>
+        <button class="btn small secundario" data-action="imprimir" data-id="${c.id}">Imprimir</button>
         <button class="btn small ${c.activo ? 'rojo' : 'verde'}" data-action="toggle" data-id="${c.id}" data-activo="${c.activo}">${c.activo ? 'Desactivar' : 'Activar'}</button>
       </div>
     `;
@@ -61,9 +63,46 @@ async function cargarChecklists() {
 
   grid.querySelectorAll('[data-action="editar"]').forEach((b) => b.addEventListener('click', () => abrirEditor(b.dataset.id)));
   grid.querySelectorAll('[data-action="duplicar"]').forEach((b) => b.addEventListener('click', () => duplicar(b.dataset.id)));
+  grid.querySelectorAll('[data-action="imprimir"]').forEach((b) => b.addEventListener('click', () => imprimirPlantilla(b.dataset.id)));
   grid.querySelectorAll('[data-action="toggle"]').forEach((b) =>
     b.addEventListener('click', () => toggleActivo(b.dataset.id, b.dataset.activo === 'true'))
   );
+}
+
+async function imprimirPlantilla(id) {
+  const res = await apiFetch(`/api/checklists/${id}`);
+  const detalle = await res.json();
+  const secciones = [];
+  let actual = null;
+  detalle.items.forEach((it) => {
+    if (!actual || actual.nombre !== it.categoria) { actual = { nombre: it.categoria, pasos: [] }; secciones.push(actual); }
+    actual.pasos.push(it.descripcion);
+  });
+
+  const html = `
+    <html><head><title>${detalle.nombre}</title>
+    <style>
+      body{font-family:Arial,sans-serif;padding:30px;color:#111}
+      h1{font-size:20px;margin-bottom:2px}
+      .meta{font-size:12px;color:#555;margin-bottom:18px}
+      .seccion{margin-bottom:16px}
+      .seccion h3{font-size:13px;background:#eee;padding:6px 10px;margin:0 0 6px}
+      .paso{font-size:12.5px;padding:4px 10px;border-bottom:1px solid #eee}
+    </style></head><body>
+    <h1>${detalle.nombre}</h1>
+    <div class="meta">Código: ${detalle.codigo_corto} · Frecuencia: ${detalle.frecuencia} · Equipos: ${detalle.equipos_requeridos.join(', ')}</div>
+    ${secciones.map((s) => `
+      <div class="seccion">
+        <h3>${s.nombre}</h3>
+        ${s.pasos.map((p, i) => `<div class="paso">${i + 1}. ${p}</div>`).join('')}
+      </div>
+    `).join('')}
+    <script>window.onload = () => window.print();<\/script>
+    </body></html>
+  `;
+  const ventana = window.open('', '_blank');
+  ventana.document.write(html);
+  ventana.document.close();
 }
 
 async function cargarPreview(id) {
@@ -148,6 +187,39 @@ async function abrirEditor(id) {
   }
   renderBotonesEquipo();
   renderSecciones();
+
+  const imgInput = document.getElementById('ed-imagen-input');
+  const imgPreview = document.getElementById('ed-imagen-preview');
+  const imgError = document.getElementById('ed-imagen-error');
+  imgError.textContent = '';
+  if (id) {
+    imgInput.disabled = false;
+    if (checklistsCache.find((c) => c.id == id)?.imagen_url) {
+      imgPreview.src = checklistsCache.find((c) => c.id == id).imagen_url;
+      imgPreview.style.display = 'block';
+    } else {
+      imgPreview.style.display = 'none';
+    }
+  } else {
+    imgInput.disabled = true;
+    imgPreview.style.display = 'none';
+    imgError.textContent = 'Guarda la plantilla primero para poder subir una imagen.';
+  }
+}
+
+async function subirImagenChecklist(e) {
+  const archivo = e.target.files[0];
+  if (!archivo || !editandoId) return;
+  const errorEl = document.getElementById('ed-imagen-error');
+  errorEl.textContent = 'Subiendo...';
+  const formData = new FormData();
+  formData.append('imagen', archivo);
+  const res = await apiFetch(`/api/checklists/${editandoId}/imagen`, { method: 'POST', body: formData });
+  const data = await res.json();
+  if (!res.ok) { errorEl.textContent = data.error || 'No se pudo subir la imagen'; return; }
+  errorEl.textContent = '';
+  document.getElementById('ed-imagen-preview').src = data.imagen_url;
+  document.getElementById('ed-imagen-preview').style.display = 'block';
 }
 
 function renderSecciones() {

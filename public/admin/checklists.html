@@ -53,6 +53,16 @@
     <p style="font-size:12px;color:var(--ink-3);margin:2px 0 8px">Toca los equipos que deben registrarse para completar este checklist.</p>
     <div id="ed-equipos-botones" class="equipo-toggle-grid"></div>
 
+    <label style="margin-top:16px">Imagen del checklist</label>
+    <p style="font-size:12px;color:var(--ink-3);margin:2px 0 8px">Se muestra en la pantalla de selección de checklist del operador.</p>
+    <div style="display:flex; gap:14px; align-items:center">
+      <img id="ed-imagen-preview" style="width:90px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--line);display:none">
+      <div>
+        <input type="file" id="ed-imagen-input" accept="image/*">
+        <div class="error-msg" id="ed-imagen-error"></div>
+      </div>
+    </div>
+
     <div id="ed-secciones" style="margin-top:18px"></div>
     <button class="btn-agregar-seccion" id="btn-agregar-seccion">+ Agregar sección</button>
 
