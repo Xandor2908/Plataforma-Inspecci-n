@@ -195,7 +195,7 @@ router.post('/', requireAuth, upload.any(), async (req, res) => {
   } catch (err) {
     await client.query('ROLLBACK');
     console.error(err);
-    res.status(500).json({ error: 'Error al guardar la inspección' });
+    res.status(500).json({ error: 'Error al guardar la inspección', detalle: err.message, codigo: err.code });
   } finally {
     client.release();
   }
