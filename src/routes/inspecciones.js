@@ -64,7 +64,8 @@ router.post('/', requireAuth, upload.any(), async (req, res) => {
     await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [carpetaFecha]);
 
     const countRes = await client.query(
-      `SELECT COUNT(*)::int AS n FROM inspecciones WHERE carpeta_fecha = $1`,
+      `SELECT COALESCE(MAX(SUBSTRING(folio FROM '-(\\d+)$')::int), 0) AS n
+       FROM inspecciones WHERE carpeta_fecha = $1`,
       [carpetaFecha]
     );
     const folio = `${carpetaFecha}-${String(countRes.rows[0].n + 1).padStart(3, '0')}`;
@@ -125,7 +126,8 @@ router.post('/', requireAuth, upload.any(), async (req, res) => {
 
       if (r.resultado === 'observado') {
         const codeCountRes = await client.query(
-          `SELECT COUNT(*)::int AS n FROM incidencias WHERE created_at::date = CURRENT_DATE`
+          `SELECT COALESCE(MAX(SUBSTRING(codigo FROM '-(\\d+)$')::int), 0) AS n
+           FROM incidencias WHERE created_at::date = CURRENT_DATE`
         );
         const codigo = `INC-${carpetaFecha}-${String(codeCountRes.rows[0].n + 1).padStart(3, '0')}`;
         const incRes = await client.query(
@@ -155,7 +157,8 @@ router.post('/', requireAuth, upload.any(), async (req, res) => {
       );
 
       const codeCountRes = await client.query(
-        `SELECT COUNT(*)::int AS n FROM incidencias WHERE created_at::date = CURRENT_DATE`
+        `SELECT COALESCE(MAX(SUBSTRING(codigo FROM '-(\\d+)$')::int), 0) AS n
+         FROM incidencias WHERE created_at::date = CURRENT_DATE`
       );
       const codigo = `INC-${carpetaFecha}-${String(codeCountRes.rows[0].n + 1).padStart(3, '0')}`;
       const incRes = await client.query(
