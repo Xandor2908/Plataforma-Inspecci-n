@@ -1,11 +1,11 @@
 const express = require('express');
 const multer = require('multer');
-const PDFDocument = require('pdfkit');
 const pool = require('../db/pool');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 const { subirImagen } = require('../cloudinary');
 const { enviarAlertaTelegram, textoAlertaIncidencia } = require('../telegram');
 const { limpiarTexto } = require('../utils');
+const { generarReportePDF } = require('../reporte-pdf');
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 } });
@@ -334,69 +334,7 @@ router.get('/:id/reporte.pdf', requireAuth, requireAdmin, async (req, res) => {
 
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `inline; filename="reporte_${inspeccion.folio}.pdf"`);
-  const doc = new PDFDocument({ margin: 40, size: 'A4' });
-  doc.pipe(res);
-
-  doc.fontSize(16).font('Helvetica-Bold').text('ESTABLO - Reporte de inspección');
-  doc.moveDown(0.3);
-  doc.fontSize(10).font('Helvetica')
-    .text(`Folio: ${inspeccion.folio}`)
-    .text(`Checklist: ${inspeccion.checklist_nombre}`)
-    .text(`Equipos: ${equiposRes.rows.map((e) => e.nomenclatura).join(', ')}`)
-    .text(`Responsable: ${inspeccion.operador_nombre}`)
-    .text(`Fecha y hora: ${new Date(inspeccion.fecha_hora).toLocaleString('es-PE')}`);
-  doc.moveDown(0.8);
-
-  const ANCHO_UTIL = doc.page.width - doc.page.margins.left - doc.page.margins.right;
-  let categoriaActual = null;
-
-  for (const r of respuestasRes.rows) {
-    // Salto de pagina si no cabe al menos el encabezado del item + un margen razonable
-    if (doc.y > 700) { doc.addPage(); categoriaActual = null; }
-
-    // Encabezado de seccion: solo se imprime una vez, no en cada actividad
-    if (r.categoria !== categoriaActual) {
-      categoriaActual = r.categoria;
-      doc.moveDown(0.3);
-      doc.rect(doc.x, doc.y, ANCHO_UTIL, 18).fill('#eef2f5');
-      doc.fillColor('#0f172a').fontSize(10).font('Helvetica-Bold')
-        .text(categoriaActual || '(sin sección)', doc.x + 6, doc.y - 15);
-      doc.fillColor('black');
-      doc.moveDown(0.6);
-    }
-
-    doc.fontSize(9.5).font('Helvetica-Bold').text(r.item_descripcion || '');
-    doc.font('Helvetica').fontSize(9).fillColor(r.resultado === 'observado' ? '#b91c1c' : '#15803d')
-      .text(`Resultado: ${r.resultado === 'observado' ? 'Observado' : 'Correcto'}`);
-    doc.fillColor('black');
-    if (r.observacion_texto) {
-      doc.fontSize(9).text(`Observación: ${r.observacion_texto}`);
-    }
-    if (r.observacion_foto_url) {
-      try {
-        const imgRes = await fetch(r.observacion_foto_url);
-        const arrayBuffer = await imgRes.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        const ANCHO_IMG = 150;
-        const ALTO_IMG = 110;
-        if (doc.y + ALTO_IMG > 760) { doc.addPage(); categoriaActual = null; }
-        const imgX = doc.x;
-        const imgY = doc.y + 4;
-        doc.image(buffer, imgX, imgY, { fit: [ANCHO_IMG, ALTO_IMG] });
-        // Se fija la posicion manualmente despues de la imagen: pdfkit no siempre
-        // corre el cursor lo suficiente, lo que causaba que el texto siguiente
-        // se superpusiera visualmente con la foto.
-        doc.y = imgY + ALTO_IMG + 10;
-        doc.x = doc.page.margins.left;
-      } catch (err) {
-        doc.fontSize(8).fillColor('gray').text('(no se pudo cargar la fotografía)');
-        doc.fillColor('black');
-      }
-    }
-    doc.moveDown(0.7);
-  }
-
-  doc.end();
+  await generarReportePDF(res, { inspeccion, equipos: equiposRes.rows, respuestas: respuestasRes.rows });
 });
 
 // Elimina un registro de inspeccion completo (y sus incidencias/respuestas asociadas).

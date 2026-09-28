@@ -18,13 +18,6 @@
     verCalendario();
   });
   document.getElementById('btn-confirmar-eliminar').addEventListener('click', confirmarEliminar);
-  document.getElementById('btn-hoy').addEventListener('click', () => {
-    const ahora = new Date();
-    document.getElementById('sel-anio').value = ahora.getFullYear();
-    document.getElementById('sel-mes').value = String(ahora.getMonth() + 1);
-    document.getElementById('filtro-fecha').value = '';
-    verCalendario();
-  });
   await verCalendario();
 })();
 
